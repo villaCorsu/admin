@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes"/>
+<title>Villa Corsu — Statistiques</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<style>
+/* ── Reset ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c1:#6C63FF; --c2:#FF6B9D; --c3:#00C9A7; --c4:#FFB347; --c5:#4FC3F7; --c6:#FF7043;
+  --bg:#0f0f1a;
+  --card:rgba(255,255,255,0.04);
+  --card-border:rgba(255,255,255,0.10);
+  --text:#f0eeff;
+  --text2:rgba(240,238,255,0.55);
+  --text3:rgba(240,238,255,0.28);
+  --radius:16px; --radius-sm:10px;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(108,99,255,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,201,167,0.14) 0%, transparent 60%);
+}
+
+/* ── Header ── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 1.5rem;
+  background:rgba(15,15,26,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:0.5px solid var(--card-border);
+  position:sticky;top:0;z-index:50;
+  flex-wrap:wrap;gap:10px;
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo-wrap{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,#6C63FF,#FF6B9D);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.title{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.subtitle{font-size:12px;color:var(--text2);margin-top:1px}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.hbtn{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;cursor:pointer;
+  font-family:inherit;transition:all .18s;text-decoration:none;
+}
+.hbtn-ghost{
+  background:rgba(255,255,255,0.06);
+  border:0.5px solid var(--card-border);
+  color:var(--text2);
+}
+.hbtn-ghost:hover{background:rgba(255,255,255,0.12);color:var(--text)}
+.hbtn-primary{
+  background:linear-gradient(135deg,#6C63FF,#FF6B9D);
+  border:none;color:#fff;
+}
+.hbtn-primary:hover{opacity:.88}
+.hbtn-primary:disabled{opacity:.4;cursor:not-allowed}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite}
+
+/* ── Sync bar ── */
+.sync-bar{
+  border-radius:var(--radius-sm);padding:9px 16px;font-size:12px;
+  margin:1rem 1.5rem 0;display:none;align-items:center;gap:8px;
+}
+.sync-bar.ok {background:rgba(0,201,167,.15);border:0.5px solid rgba(0,201,167,.4);color:#00C9A7}
+.sync-bar.err{background:rgba(255,107,157,.12);border:0.5px solid rgba(255,107,157,.4);color:#FF6B9D}
+.sync-bar.loading{background:rgba(108,99,255,.12);border:0.5px solid rgba(108,99,255,.4);color:#a39dff}
+
+/* ── Page ── */
+.page{max-width:1080px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
+
+/* ── Hero banner ── */
+.hero{
+  background:linear-gradient(135deg,#1a1640 0%,#0f1a2e 50%,#1a0f2e 100%);
+  border:0.5px solid var(--card-border);
+  border-radius:20px;padding:2rem;margin-bottom:1.5rem;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 10% 50%,rgba(108,99,255,.35) 0%,transparent 50%),
+    radial-gradient(circle at 90% 30%,rgba(255,107,157,.25) 0%,transparent 50%),
+    radial-gradient(circle at 50% 100%,rgba(0,201,167,.2) 0%,transparent 50%);
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:1}
+.hero-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:.5rem}
+.hero-year{font-size:42px;font-weight:800;letter-spacing:-2px;
+  background:linear-gradient(90deg,#a39dff,#FF6B9D,#FFB347);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;
+}
+.hero-sub{font-size:14px;color:var(--text2);margin-top:.5rem}
+
+/* ── KPI grid ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:1.5rem}
+.kpi{
+  border-radius:var(--radius);padding:1.1rem 1.25rem;
+  background:var(--card);border:0.5px solid var(--card-border);
+  position:relative;overflow:hidden;cursor:default;
+  transition:transform .18s,box-shadow .18s;
+}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.kpi-glow{
+  position:absolute;top:-30px;right:-30px;width:100px;height:100px;
+  border-radius:50%;opacity:.15;pointer-events:none;
+}
+.kpi-icon{font-size:20px;margin-bottom:.5rem;display:block}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:.35rem}
+.kpi-value{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.kpi-trend{font-size:11px;font-weight:600;margin-top:.3rem;display:flex;align-items:center;gap:3px}
+.kpi-trend.up  {color:#00C9A7} .kpi-trend.down{color:#FF6B9D} .kpi-trend.flat{color:var(--text3)}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:.2rem}
+
+/* ── Chart grid ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{
+  background:var(--card);border:0.5px solid var(--card-border);
+  border-radius:var(--radius);padding:1.4rem;
+  transition:box-shadow .18s;
+}
+.chart-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.35)}
+.chart-card.wide{grid-column:1/-1}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.25rem;gap:8px;flex-wrap:wrap}
+.chart-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.chart-sub{font-size:11px;color:var(--text2);margin-bottom:1rem;line-height:1.5}
+.chart-wrap{position:relative}
+.chart-wrap.h220{height:220px} .chart-wrap.h260{height:260px} .chart-wrap.h300{height:300px}
+
+/* ── Year chips ── */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{
+  padding:4px 13px;border-radius:20px;font-size:11px;font-weight:600;
+  cursor:pointer;border:0.5px solid var(--card-border);
+  background:rgba(255,255,255,0.05);color:var(--text2);
+  font-family:inherit;transition:all .15s;
+}
+.chip:hover{background:rgba(255,255,255,0.10);color:var(--text)}
+.chip.c1.active{background:#6C63FF;border-color:#6C63FF;color:#fff}
+.chip.c2.active{background:#FF6B9D;border-color:#FF6B9D;color:#fff}
+.chip.c3.active{background:#00C9A7;border-color:#00C9A7;color:#fff}
+.chip.c4.active{background:#FFB347;border-color:#FFB347;color:#1a1a2e}
+.chip.c5.active{background:#4FC3F7;border-color:#4FC3F7;color:#1a1a2e}
+
+/* ── Comparison table ── */
+.comp-table{width:100%;border-collapse:collapse;font-size:13px}
+.comp-table th{
+  font-size:10px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.5px;
+  padding:8px 12px;border-bottom:0.5px solid var(--card-border);text-align:right;
+}
+.comp-table th:first-child{text-align:left}
+.comp-table td{padding:10px 12px;border-bottom:0.5px solid rgba(255,255,255,0.05);text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.comp-table td:first-child{text-align:left;font-weight:700}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr:hover td{background:rgba(255,255,255,0.03)}
+.bar-cell{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.mini-bar{height:5px;border-radius:3px;min-width:2px;opacity:.85}
+.year-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:4px}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .charts-grid{grid-template-columns:1fr}
+  .chart-card.wide{grid-column:1}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-year{font-size:32px}
+  .kpi-value{font-size:20px}
+  .page{padding:1.25rem 1rem 4rem}
+  .chart-wrap.h260{height:220px}
+  .chart-wrap.h300{height:240px}
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-wrap">🏡</div>
+    <div>
+      <div class="title">Villa Corsu</div>
+      <div class="subtitle">Statistiques & Comparatifs</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="hbtn hbtn-ghost" id="sync-btn" onclick="doSync()">
+      <svg id="sync-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Sync
+    </button>
+    <a class="hbtn hbtn-ghost" href="index.html">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Calendrier
+    </a>
+  </div>
+</div>
+
+<div class="sync-bar" id="sync-bar"></div>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-title">Tableau de bord</div>
+      <div class="hero-year" id="hero-year">—</div>
+      <div class="hero-sub" id="hero-sub">Chargement des données…</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+
+    <div class="chart-card wide">
+      <div class="card-header">
+        <div>
+          <div class="chart-title">Revenus annuels</div>
+          <div class="chart-sub">Total des loyers encaissés par année</div>
+        </div>
+      </div>
+      <div class="chart-wrap h220"><canvas id="chart-revenue"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Nuitées louées</div>
+      <div class="chart-sub">Jours locataires vs propriétaire</div>
+      <div class="chart-wrap h220"><canvas id="chart-nights"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Visiteurs accueillis</div>
+      <div class="chart-sub">Total personnes par année</div>
+      <div class="chart-wrap h220"><canvas id="chart-visitors"></canvas></div>
+    </div>
+
+    <div class="chart-card wide">
+      <div class="chart-title">Prix moyen par nuitée</div>
+      <div class="chart-sub">Évolution mensuelle du tarif — sélectionnez une année</div>
+      <div class="chips" id="price-chips"></div>
+      <div class="chart-wrap h260"><canvas id="chart-price"></canvas></div>
+    </div>
+
+    <div class="chart-card wide">
+      <div class="chart-title">Taux d'occupation mensuel</div>
+      <div class="chart-sub">% jours loués par mois — comparez plusieurs années</div>
+      <div class="chips" id="occ-chips"></div>
+      <div class="chart-wrap h260"><canvas id="chart-occ"></canvas></div>
+    </div>
+
+    <div class="chart-card wide">
+      <div class="chart-title">Comparatif annuel</div>
+      <div class="chart-sub">Toutes les métriques en un coup d'œil</div>
+      <div id="comp-table-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Palette ───────────────────────────────────────────────────
+const PALETTE = ['#6C63FF','#FF6B9D','#00C9A7','#FFB347','#4FC3F7','#FF7043'];
+const PALETTE_BG = ['rgba(108,99,255,.18)','rgba(255,107,157,.18)','rgba(0,201,167,.18)','rgba(255,179,71,.18)','rgba(79,195,247,.18)','rgba(255,112,67,.18)'];
+const MONTHS      = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const MONTHS_FULL = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const KPI_ICONS   = ['💰','🌙','📊','💎','🏠','🌍'];
+const KPI_COLORS  = ['#6C63FF','#FF6B9D','#00C9A7','#FFB347','#4FC3F7','#FF7043'];
+
+// ── Chart defaults ────────────────────────────────────────────
+Chart.defaults.font.family = '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+Chart.defaults.font.size   = 12;
+Chart.defaults.color       = 'rgba(240,238,255,.55)';
+
+const GC = 'rgba(255,255,255,.06)';
+const baseScales = {
+  x:{ grid:{color:GC}, ticks:{color:'rgba(240,238,255,.45)'} },
+  y:{ grid:{color:GC}, ticks:{color:'rgba(240,238,255,.45)'}, border:{dash:[3,3]} }
+};
+
+// ── State ─────────────────────────────────────────────────────
+let BOOKINGS = [];
+
+function parseDate(s){ const[d,m,y]=s.split('/'); return new Date(+y,+m-1,+d); }
+function enrichBookings(raw){
+  return raw.map(b=>({...b,arrDate:parseDate(b.arr),depDate:parseDate(b.dep),isOwner:b.name.toLowerCase().includes('propriétaire')}));
+}
+
+// ── Compute ───────────────────────────────────────────────────
+function getYears(){
+  const s=new Set();
+  BOOKINGS.forEach(b=>{s.add(b.arrDate.getFullYear());s.add(b.depDate.getFullYear());});
+  return [...s].filter(y=>y>2020).sort();
+}
+
+function statsForYear(year){
+  let revenue=0,bookedDays=0,ownerDays=0,nbSejours=0;
+  const yS=new Date(year,0,1),yE=new Date(year,11,31,23,59,59);
+  for(const b of BOOKINGS){
+    const s=b.arrDate<yS?yS:b.arrDate, e=b.depDate>yE?yE:b.depDate;
+    const days=Math.max(0,Math.round((e-s)/86400000));
+    if(days>0&&b.arrDate.getFullYear()<=year&&b.depDate.getFullYear()>=year){
+      if(b.isOwner) ownerDays+=days;
+      else{ bookedDays+=days; revenue+=b.prix; nbSejours++; }
+    }
+  }
+  const taux=Math.round(bookedDays/365*100);
+  const prixNuit=bookedDays>0?Math.round(revenue/bookedDays):0;
+  const visitors=BOOKINGS.filter(b=>!b.isOwner&&(b.arrDate.getFullYear()===year||b.depDate.getFullYear()===year)).reduce((a,b)=>a+b.vis,0);
+  return{year,revenue,bookedDays,ownerDays,nbSejours,visitors,taux,prixNuit};
+}
+
+function occByMonth(year){
+  return Array.from({length:12},(_,m)=>{
+    const dim=new Date(year,m+1,0).getDate(); let booked=0;
+    for(let d=1;d<=dim;d++){
+      const date=new Date(year,m,d);
+      for(const b of BOOKINGS){ if(!b.isOwner&&date>=b.arrDate&&date<b.depDate){booked++;break;} }
+    }
+    return Math.round(booked/dim*100);
+  });
+}
+
+function priceByMonth(year){
+  return Array.from({length:12},(_,m)=>{
+    let rev=0,nights=0;
+    for(const b of BOOKINGS){
+      if(b.isOwner) continue;
+      const mS=new Date(year,m,1),mE=new Date(year,m+1,0,23,59,59);
+      const s=b.arrDate<mS?mS:b.arrDate,e=b.depDate>mE?mE:b.depDate;
+      const days=Math.max(0,Math.round((e-s)/86400000));
+      if(days>0){const tn=Math.round((b.depDate-b.arrDate)/86400000);rev+=b.prix*(tn>0?days/tn:0);nights+=days;}
+    }
+    return nights>0?Math.round(rev/nights):null;
+  });
+}
+
+// ── Sync ──────────────────────────────────────────────────────
+const syncBar=document.getElementById('sync-bar');
+function setSyncBar(state,msg){
+  syncBar.className='sync-bar '+state; syncBar.innerHTML=msg; syncBar.style.display='flex';
+  if(state!=='err') setTimeout(()=>{syncBar.style.display='none';},4000);
+}
+async function doSync(){
+  const btn=document.getElementById('sync-btn'),icon=document.getElementById('sync-icon');
+  btn.disabled=true; icon.classList.add('spinning');
+  setSyncBar('loading','⏳ Synchronisation…');
+  try{
+    const raw=await loadSheetData(); BOOKINGS=enrichBookings(raw);
+    setSyncBar('ok',`✅ ${raw.length} réservations chargées`); buildAll();
+  }catch(e){ setSyncBar('err',`❌ ${e.message}`); }
+  finally{ btn.disabled=false; icon.classList.remove('spinning'); }
+}
+
+// ── Build ─────────────────────────────────────────────────────
+const charts={};
+function kill(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function buildAll(){
+  const years=getYears(); if(!years.length) return;
+  const allStats=years.map(statsForYear);
+  buildHero(years,allStats);
+  buildKPIs(years,allStats);
+  buildRevenue(years,allStats);
+  buildNights(years,allStats);
+  buildVisitors(years,allStats);
+  buildPrice(years);
+  buildOcc(years);
+  buildTable(years,allStats);
+}
+
+// ── Hero ──────────────────────────────────────────────────────
+function buildHero(years,allStats){
+  const last=allStats[allStats.length-1];
+  document.getElementById('hero-year').textContent=last.year;
+  document.getElementById('hero-sub').textContent=
+    `${last.revenue.toLocaleString('fr-FR')} € de revenus · ${last.bookedDays} nuitées louées · ${last.taux}% d'occupation`;
+}
+
+// ── KPIs ──────────────────────────────────────────────────────
+function buildKPIs(years,allStats){
+  const last=allStats[allStats.length-1];
+  const prev=allStats.length>1?allStats[allStats.length-2]:null;
+  const totalRev=allStats.reduce((a,s)=>a+s.revenue,0);
+
+  function trend(cur,pre){
+    if(!pre||pre===0) return '';
+    const pct=Math.round((cur-pre)/pre*100);
+    const cls=pct>0?'up':pct<0?'down':'flat';
+    const arrow=pct>0?'↑ ':pct<0?'↓ ':'→ ';
+    return `<div class="kpi-trend ${cls}">${arrow}${Math.abs(pct)}% vs ${prev.year}</div>`;
+  }
+
+  const kpis=[
+    {icon:'💰',label:`Revenus ${last.year}`,value:`${last.revenue.toLocaleString('fr-FR')} €`,trend:trend(last.revenue,prev?.revenue),color:KPI_COLORS[0]},
+    {icon:'🌙',label:`Nuitées ${last.year}`,value:`${last.bookedDays} j`,trend:trend(last.bookedDays,prev?.bookedDays),color:KPI_COLORS[1]},
+    {icon:'📊',label:`Occupation ${last.year}`,value:`${last.taux}%`,trend:trend(last.taux,prev?.taux),color:KPI_COLORS[2]},
+    {icon:'💎',label:`Prix / nuit ${last.year}`,value:`${last.prixNuit} €`,trend:trend(last.prixNuit,prev?.prixNuit),color:KPI_COLORS[3]},
+    {icon:'🏠',label:`Séjours ${last.year}`,value:`${last.nbSejours}`,trend:trend(last.nbSejours,prev?.nbSejours),color:KPI_COLORS[4]},
+    {icon:'🌍',label:'Revenus totaux',value:`${(totalRev/1000).toFixed(1)}k €`,sub:`${years[0]}–${years[years.length-1]}`,color:KPI_COLORS[5]},
+  ];
+
+  document.getElementById('kpi-grid').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-glow" style="background:${k.color}"></div>
+      <span class="kpi-icon">${k.icon}</span>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="color:${k.color}">${k.value}</div>
+      ${k.trend||''} ${k.sub?`<div class="kpi-sub">${k.sub}</div>`:''}
+    </div>`).join('');
+}
+
+// ── Revenue ───────────────────────────────────────────────────
+function buildRevenue(years,allStats){
+  kill('revenue');
+  // Create gradient per bar
+  const ctx=document.getElementById('chart-revenue').getContext('2d');
+  const grads=years.map((_,i)=>{
+    const g=ctx.createLinearGradient(0,0,0,220);
+    g.addColorStop(0,PALETTE[i%PALETTE.length]);
+    g.addColorStop(1,PALETTE_BG[i%PALETTE.length]);
+    return g;
+  });
+  charts.revenue=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:years.map(String),
+      datasets:[{
+        label:'Revenus (€)',data:allStats.map(s=>s.revenue),
+        backgroundColor:grads,borderColor:years.map((_,i)=>PALETTE[i%PALETTE.length]),
+        borderWidth:1.5,borderRadius:8,borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toLocaleString('fr-FR')} €`}}},
+      scales:{...baseScales,y:{...baseScales.y,ticks:{...baseScales.y.ticks,callback:v=>`${(v/1000).toFixed(0)}k €`}}}
+    }
+  });
+}
+
+// ── Nights ────────────────────────────────────────────────────
+function buildNights(years,allStats){
+  kill('nights');
+  const ctx=document.getElementById('chart-nights').getContext('2d');
+  charts.nights=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:years.map(String),
+      datasets:[
+        {label:'Locataires',data:allStats.map(s=>s.bookedDays),backgroundColor:'#6C63FF',borderRadius:6,stack:'a'},
+        {label:'Propriétaire',data:allStats.map(s=>s.ownerDays),backgroundColor:'#00C9A7',borderRadius:6,stack:'a'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'rgba(240,238,255,.55)',usePointStyle:true,boxWidth:8}}},
+      scales:{...baseScales,y:{...baseScales.y,ticks:{...baseScales.y.ticks,callback:v=>`${v} j`}},x:{...baseScales.x,stacked:true}}
+    }
+  });
+}
+
+// ── Visitors ──────────────────────────────────────────────────
+function buildVisitors(years,allStats){
+  kill('visitors');
+  const ctx=document.getElementById('chart-visitors').getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,220);
+  g.addColorStop(0,'#FFB347'); g.addColorStop(1,'rgba(255,179,71,.1)');
+  charts.visitors=new Chart(ctx,{
+    type:'bar',
+    data:{labels:years.map(String),datasets:[{label:'Visiteurs',data:allStats.map(s=>s.visitors),backgroundColor:g,borderColor:'#FFB347',borderWidth:1.5,borderRadius:8,borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:baseScales
+    }
+  });
+}
+
+// ── Price per night ───────────────────────────────────────────
+let activePriceYear=null;
+function buildPrice(years){
+  if(!activePriceYear||!years.includes(activePriceYear)) activePriceYear=years[years.length-1];
+  const wrap=document.getElementById('price-chips');
+  const colorClass=['c1','c2','c3','c4','c5'];
+  wrap.innerHTML=years.map((y,i)=>`<button class="chip ${colorClass[i%colorClass.length]}${y===activePriceYear?' active':''}" onclick="selectPriceYear(${y})">${y}</button>`).join('');
+  renderPriceChart(years);
+}
+function selectPriceYear(y){
+  activePriceYear=y;
+  document.querySelectorAll('#price-chips .chip').forEach((b,i)=>{
+    const yr=+b.textContent; b.className=b.className.replace(' active','');
+    if(yr===y) b.className+=' active';
+  });
+  renderPriceChart(getYears());
+}
+function renderPriceChart(years){
+  kill('price');
+  const data=priceByMonth(activePriceYear);
+  const yi=years.indexOf(activePriceYear);
+  const col=PALETTE[yi%PALETTE.length];
+  const ctx=document.getElementById('chart-price').getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,260);
+  g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00');
+  charts.price=new Chart(ctx,{
+    type:'line',
+    data:{labels:MONTHS,datasets:[{
+      label:`Prix/nuit ${activePriceYear}`,data:data.map(v=>v??0),
+      borderColor:col,backgroundColor:g,borderWidth:3,
+      pointRadius:data.map(v=>v?6:0),pointHoverRadius:8,
+      pointBackgroundColor:col,pointBorderColor:'#0f0f1a',pointBorderWidth:2,
+      fill:true,tension:.4,spanGaps:false,
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y>0?`${c.parsed.y} € / nuit`:'Pas de location',title:c=>MONTHS_FULL[c[0].dataIndex]}}},
+      scales:{...baseScales,y:{...baseScales.y,min:0,ticks:{...baseScales.y.ticks,callback:v=>v>0?`${v} €`:''}}}
+    }
+  });
+}
+
+// ── Occupancy ─────────────────────────────────────────────────
+let activeOccYears=[];
+function buildOcc(years){
+  if(!activeOccYears.length) activeOccYears=[...years];
+  const wrap=document.getElementById('occ-chips');
+  const colorClass=['c1','c2','c3','c4','c5'];
+  wrap.innerHTML=years.map((y,i)=>`<button class="chip ${colorClass[i%colorClass.length]}${activeOccYears.includes(y)?' active':''}" onclick="toggleOccYear(${y})">${y}</button>`).join('');
+  renderOccChart(years);
+}
+function toggleOccYear(y){
+  const i=activeOccYears.indexOf(y);
+  if(i>=0){if(activeOccYears.length>1)activeOccYears.splice(i,1);}else activeOccYears.push(y);
+  document.querySelectorAll('#occ-chips .chip').forEach(b=>{
+    b.className=b.className.replace(' active','');
+    if(activeOccYears.includes(+b.textContent)) b.className+=' active';
+  });
+  renderOccChart(getYears());
+}
+function renderOccChart(years){
+  kill('occ');
+  const ctx=document.getElementById('chart-occ').getContext('2d');
+  const datasets=activeOccYears.sort().map((y,i)=>{
+    const col=PALETTE[years.indexOf(y)%PALETTE.length];
+    const g=ctx.createLinearGradient(0,0,0,260);
+    g.addColorStop(0,col+'40'); g.addColorStop(1,col+'00');
+    return{
+      label:String(y),data:occByMonth(y),
+      borderColor:col,backgroundColor:g,borderWidth:2.5,
+      pointRadius:4,pointHoverRadius:7,
+      pointBackgroundColor:col,pointBorderColor:'#0f0f1a',pointBorderWidth:2,
+      fill:activeOccYears.length===1,tension:.4,
+    };
+  });
+  charts.occ=new Chart(ctx,{
+    type:'line',
+    data:{labels:MONTHS,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'rgba(240,238,255,.55)',usePointStyle:true,boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label} : ${c.parsed.y}%`,title:c=>MONTHS_FULL[c[0].dataIndex]}}},
+      scales:{...baseScales,y:{...baseScales.y,min:0,max:100,ticks:{...baseScales.y.ticks,callback:v=>`${v}%`}}}
+    }
+  });
+}
+
+// ── Table ─────────────────────────────────────────────────────
+function buildTable(years,allStats){
+  const maxR=Math.max(...allStats.map(s=>s.revenue));
+  const maxN=Math.max(...allStats.map(s=>s.bookedDays));
+  const maxV=Math.max(...allStats.map(s=>s.visitors));
+  let html=`<table class="comp-table"><thead><tr>
+    <th>Année</th><th>Revenus</th><th>Nuitées</th><th>Occupation</th><th>Prix / nuit</th><th>Séjours</th><th>Visiteurs</th>
+  </tr></thead><tbody>`;
+  allStats.forEach((s,i)=>{
+    const col=PALETTE[i%PALETTE.length];
+    html+=`<tr>
+      <td><span class="year-dot" style="background:${col};display:inline-block;vertical-align:middle"></span>${s.year}</td>
+      <td><div class="bar-cell"><div class="mini-bar" style="width:${Math.round(s.revenue/maxR*80)}px;background:${col}"></div>${s.revenue.toLocaleString('fr-FR')} €</div></td>
+      <td><div class="bar-cell"><div class="mini-bar" style="width:${Math.round(s.bookedDays/maxN*80)}px;background:${col}"></div>${s.bookedDays} j</div></td>
+      <td style="color:${col};font-weight:700">${s.taux}%</td>
+      <td>${s.prixNuit} €</td>
+      <td>${s.nbSejours}</td>
+      <td><div class="bar-cell"><div class="mini-bar" style="width:${Math.round(s.visitors/maxV*80)}px;background:${col}"></div>${s.visitors}</div></td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('comp-table-wrap').innerHTML=html;
+}
+
+// ── Init ──────────────────────────────────────────────────────
+(async function init(){
+  BOOKINGS=enrichBookings(FALLBACK_DATA);
+  buildAll();
+  setSyncBar('loading','⏳ Chargement depuis Google Sheets…');
+  try{
+    const raw=await loadSheetData(); BOOKINGS=enrichBookings(raw);
+    const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    setSyncBar('ok',`✅ ${raw.length} réservations — ${t}`);
+    buildAll();
+  }catch(e){ setSyncBar('err',`⚠️ Données locales — ${e.message}`); }
+})();
+</script>
+</body>
+</html>
