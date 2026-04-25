@@ -656,8 +656,7 @@ async function openCalEdit(){
     if(!res.ok) throw new Error('GitHub '+res.status+(res.status===404?' — fichier introuvable':res.status===401?' — token invalide':''));
     const j=await res.json();
     ceSha=j.sha;
-    const raw=atob(j.content.replace(/
-/g,''));
+    const raw=atob(j.content.replace(/\n/g,''));
     const txt=new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c=>c.charCodeAt(0))));
     ceD=ceParseCsv(txt);ceRender();
     ceStat('ok','Chargé depuis GitHub : '+ceD.length+' réservations');
