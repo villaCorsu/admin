@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Villa Corsu — Accès</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#0f0f1a;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%,rgba(108,99,255,.2) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%,rgba(0,201,167,.15) 0%,transparent 60%);
+}
+.card{
+  background:rgba(255,255,255,.04);
+  border:0.5px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:2.5rem 2rem;
+  width:100%;max-width:360px;text-align:center;
+}
+.logo{width:120px;height:120px;margin:0 auto 1.5rem;object-fit:contain;filter:invert(1) brightness(1.8)}
+.title{
+  font-size:22px;font-weight:800;
+  background:linear-gradient(90deg,#a39dff,#FF6B9D);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:4px;
+}
+.subtitle{font-size:13px;color:rgba(240,238,255,.4);margin-bottom:2.5rem}
+
+/* Code digits */
+.code-wrap{display:flex;gap:12px;justify-content:center;margin-bottom:1.5rem}
+.digit{
+  width:56px;height:64px;
+  background:rgba(255,255,255,.07);
+  border:0.5px solid rgba(255,255,255,.18);
+  border-radius:12px;
+  font-size:28px;font-weight:700;color:#f0eeff;
+  text-align:center;outline:none;
+  transition:border-color .15s, background .15s;
+  caret-color:transparent;
+}
+.digit:focus{border-color:rgba(108,99,255,.7);background:rgba(108,99,255,.12)}
+.digit.filled{border-color:rgba(108,99,255,.4)}
+.digit.error{border-color:rgba(255,107,157,.6)!important;background:rgba(255,107,157,.08)!important}
+
+.btn{
+  width:100%;background:linear-gradient(135deg,#6C63FF,#8B82FF);
+  color:#fff;border:none;border-radius:10px;padding:13px;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:opacity .18s,transform .18s;
+}
+.btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn.success{background:linear-gradient(135deg,#00C9A7,#00a88d)}
+
+.error-msg{
+  background:rgba(255,107,157,.12);border:0.5px solid rgba(255,107,157,.35);
+  border-radius:8px;padding:9px 13px;font-size:13px;color:#FF6B9D;
+  margin-bottom:1rem;display:none;
+}
+.hint{font-size:11px;color:rgba(240,238,255,.2);margin-top:1.25rem}
+
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-7px)} 40%{transform:translateX(7px)}
+  60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+}
+.shake{animation:shake .35s ease}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <img class="logo" src="logo.png" alt="Villa Corsu"/>
+  <div class="title">Villa Corsu</div>
+  <div class="subtitle">Entrez votre code d'accès</div>
+
+  <div class="error-msg" id="err">❌ Code incorrect, réessayez</div>
+
+  <div class="code-wrap">
+    <input class="digit" id="d0" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]"/>
+    <input class="digit" id="d1" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]"/>
+    <input class="digit" id="d2" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]"/>
+    <input class="digit" id="d3" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]"/>
+  </div>
+
+  <button class="btn" id="btn" onclick="verify()" disabled>Accéder</button>
+  <div class="hint">Villa Corsu · Laetitia &amp; Fred</div>
+</div>
+
+<script>
+const CODE = '6025';
+const SESSION_KEY = 'vc_session';
+
+// Already logged in?
+if (sessionStorage.getItem(SESSION_KEY) === CODE) {
+  window.location.replace('index.html');
+}
+
+const digits = [0,1,2,3].map(i => document.getElementById('d' + i));
+const btn    = document.getElementById('btn');
+const err    = document.getElementById('err');
+const card   = document.getElementById('card');
+
+// Focus first digit on load
+digits[0].focus();
+
+digits.forEach((d, i) => {
+  d.addEventListener('input', e => {
+    // Keep only last digit typed
+    const val = d.value.replace(/\D/g,'').slice(-1);
+    d.value = val;
+    d.classList.toggle('filled', val !== '');
+    err.style.display = 'none';
+    digits.forEach(x => x.classList.remove('error'));
+
+    if (val && i < 3) digits[i+1].focus();
+    updateBtn();
+  });
+
+  d.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !d.value && i > 0) {
+      digits[i-1].value = '';
+      digits[i-1].classList.remove('filled');
+      digits[i-1].focus();
+      updateBtn();
+    }
+    if (e.key === 'Enter') verify();
+    // Block non-numeric except control keys
+    if (!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight','Delete'].includes(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  // Select all on focus for easy replacement
+  d.addEventListener('focus', () => d.select());
+
+  // Handle paste on any digit
+  d.addEventListener('paste', e => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,4);
+    pasted.split('').forEach((ch, j) => {
+      if (digits[j]) { digits[j].value = ch; digits[j].classList.add('filled'); }
+    });
+    const next = Math.min(pasted.length, 3);
+    digits[next].focus();
+    updateBtn();
+  });
+});
+
+function updateBtn(){
+  const full = digits.every(d => d.value !== '');
+  btn.disabled = !full;
+}
+
+function verify(){
+  const entered = digits.map(d => d.value).join('');
+  if (entered.length < 4) return;
+
+  if (entered === CODE) {
+    sessionStorage.setItem(SESSION_KEY, CODE);
+    btn.textContent = '✓ Accès autorisé…';
+    btn.classList.add('success');
+    btn.disabled = true;
+    setTimeout(() => window.location.replace('index.html'), 400);
+  } else {
+    // Wrong code
+    err.style.display = 'block';
+    digits.forEach(d => d.classList.add('error'));
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+    card.addEventListener('animationend', () => {
+      card.classList.remove('shake');
+      digits.forEach(d => { d.value = ''; d.classList.remove('filled','error'); });
+      digits[0].focus();
+      btn.disabled = true;
+    }, {once: true});
+  }
+}
+</script>
+</body>
+</html>

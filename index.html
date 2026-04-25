@@ -1,731 +1,1038 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Villa Corsu — Réservations</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-/* ── Reset & Vars ── */
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ink:#1a1614;--ink2:#4a3f3a;--ink3:#8a7f7a;
-  --cream:#faf7f2;--warm:#f3ede3;--warm2:#e8dfd2;
-  --gold:#b8860b;--gold2:#d4a017;--gold3:#f0c040;
-  --teal:#2a7a6a;--teal2:#3a9a86;
-  --rose:#c0392b;--rose2:#e74c3c;
-  --radius:12px;--radius-sm:8px;
-  --shadow:0 2px 20px rgba(26,22,20,.08);
-  --shadow-lg:0 8px 40px rgba(26,22,20,.14);
-}
-
-body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--cream);color:var(--ink);
-  min-height:100vh;
-}
-
-/* ── Background texture ── */
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:
-    radial-gradient(ellipse 70% 50% at 10% 0%,rgba(184,134,11,.07) 0%,transparent 60%),
-    radial-gradient(ellipse 50% 60% at 90% 100%,rgba(42,122,106,.06) 0%,transparent 60%);
-}
-
-/* ── Header ── */
-.header{
-  position:sticky;top:0;z-index:50;
-  background:rgba(250,247,242,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--warm2);
-  padding:0 2rem;
-  display:flex;align-items:center;justify-content:space-between;
-  height:68px;gap:1rem;
-}
-.logo{display:flex;align-items:center;gap:14px}
-.logo-mark{
-  width:42px;height:42px;border-radius:10px;
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Playfair Display',serif;font-size:18px;font-weight:700;
-  color:#fff;letter-spacing:-.5px;flex-shrink:0;
-  box-shadow:0 2px 8px rgba(184,134,11,.3);
-}
-.logo-text{
-  font-family:'Playfair Display',serif;
-  font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.3px;
-  line-height:1.1;
-}
-.logo-sub{font-size:11px;font-weight:400;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
-.header-right{display:flex;align-items:center;gap:10px}
-
-/* ── Buttons ── */
-.btn{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;
-  cursor:pointer;font-family:inherit;border:none;transition:all .15s;
-}
-.btn-gold{background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(184,134,11,.3)}
-.btn-gold:hover:not(:disabled){background:var(--gold2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(184,134,11,.35)}
-.btn-teal{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(42,122,106,.25)}
-.btn-teal:hover:not(:disabled){background:var(--teal2);transform:translateY(-1px)}
-.btn-ghost{background:transparent;border:1px solid var(--warm2);color:var(--ink2)}
-.btn-ghost:hover:not(:disabled){background:var(--warm);border-color:var(--ink3)}
-.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:var(--rose)}
-.btn-danger:hover:not(:disabled){background:#fee2e2}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-.btn-sm{padding:5px 11px;font-size:12px}
-.btn-icon{padding:7px;border-radius:var(--radius-sm);width:34px;height:34px;justify-content:center}
-
-/* ── Token bar ── */
-.token-bar{
-  background:var(--warm);border-bottom:1px solid var(--warm2);
-  padding:.6rem 2rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-}
-.token-bar label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.token-input{
-  flex:1;min-width:180px;max-width:300px;
-  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);
-  padding:6px 11px;font-size:12px;font-family:'DM Mono',monospace;color:var(--ink);outline:none;
-  transition:border-color .15s;
-}
-.token-input:focus{border-color:var(--gold)}
-.token-status{font-size:12px;font-weight:500;margin-left:auto}
-.token-status.ok{color:var(--teal)}
-.token-status.none{color:var(--ink3)}
-
-/* ── Main layout ── */
-.main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
-
-/* ── Status bar ── */
-.status-bar{
-  border-radius:var(--radius);padding:10px 16px;font-size:13px;font-weight:500;
-  margin-bottom:1.5rem;display:none;align-items:center;gap:10px;
-}
-.status-bar.show{display:flex}
-.status-bar.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
-.status-bar.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
-.status-bar.info{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
-
-/* ── Stats strip ── */
-.stats-strip{
-  display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;
-}
-.stat{
-  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius);
-  padding:.9rem 1.2rem;flex:1;min-width:120px;
-  box-shadow:var(--shadow);
-}
-.stat-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink);line-height:1}
-.stat-lbl{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.stat-sub{font-size:12px;color:var(--ink2);margin-top:2px}
-
-/* ── Toolbar ── */
-.toolbar{
-  display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;
-}
-.toolbar-left{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
-.search-wrap{position:relative}
-.search-input{
-  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);
-  padding:7px 12px 7px 34px;font-size:13px;color:var(--ink);font-family:inherit;
-  outline:none;width:200px;transition:border-color .15s,width .2s;
-}
-.search-input:focus{border-color:var(--gold);width:240px}
-.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none}
-
-/* ── Table ── */
-.table-wrap{
-  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius);
-  box-shadow:var(--shadow);overflow:hidden;
-}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead tr{background:var(--warm);border-bottom:1.5px solid var(--warm2)}
-th{
-  padding:10px 14px;text-align:left;font-size:10px;font-weight:600;
-  text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);white-space:nowrap;
-  cursor:pointer;user-select:none;
-}
-th:hover{color:var(--ink2)}
-th .sort-arrow{opacity:.35;margin-left:4px;font-size:9px}
-th.sorted .sort-arrow{opacity:1;color:var(--gold)}
-tbody tr{border-bottom:1px solid var(--warm2);transition:background .1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--cream)}
-tbody tr.owner-row{background:#f0fdf9}
-tbody tr.owner-row:hover{background:#e6faf5}
-td{padding:0}
-
-/* ── Editable cells ── */
-.cell-input{
-  background:transparent;border:none;color:var(--ink);font-family:inherit;font-size:13px;
-  width:100%;padding:9px 14px;outline:none;transition:background .12s;
-}
-.cell-input:focus{background:rgba(184,134,11,.08);border-radius:0}
-.cell-input.mono{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.02em}
-.cell-input.center{text-align:center}
-.cell-input.right{text-align:right}
-.cell-nights{padding:9px 14px;font-size:12px;color:var(--ink3);text-align:center;white-space:nowrap;font-family:'DM Mono',monospace}
-.cell-type{padding:9px 10px;text-align:center}
-.type-badge{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:22px;height:22px;border-radius:50%;font-size:10px;
-}
-.type-loc{background:#fef3c7;color:#92400e}
-.type-own{background:#d1fae5;color:#065f46}
-.cell-del{padding:9px 10px;text-align:center}
-.del-btn{
-  background:none;border:none;cursor:pointer;color:#fca5a5;
-  padding:3px;border-radius:6px;line-height:1;transition:all .12s;opacity:.5;
-}
-.del-btn:hover{color:var(--rose);background:#fef2f2;opacity:1}
-
-/* ── Empty / Loading ── */
-.placeholder{text-align:center;padding:4rem 2rem;color:var(--ink3)}
-.placeholder-icon{font-size:40px;margin-bottom:.75rem;opacity:.4}
-.placeholder p{font-size:14px}
-.spinner{
-  width:24px;height:24px;border:2.5px solid var(--warm2);border-top-color:var(--gold);
-  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── New row ── */
-tbody tr.new-row{background:#fffbeb}
-tbody tr.new-row .cell-input{color:var(--ink)}
-
-/* ── Save notice ── */
-.save-notice{
-  position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;
-  background:var(--ink);color:#fff;border-radius:var(--radius);
-  padding:12px 18px;font-size:13px;font-weight:500;
-  display:flex;align-items:center;gap:10px;
-  box-shadow:var(--shadow-lg);
-  transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);
-}
-.save-notice.show{transform:translateY(0);opacity:1}
-.save-notice.ok{background:#166534}
-.save-notice.err{background:#991b1b}
-
-/* ── Modal ── */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(26,22,20,.5);z-index:200;
-  display:none;align-items:center;justify-content:center;padding:1rem;
-  backdrop-filter:blur(4px);
-}
-.modal-overlay.show{display:flex}
-.modal{
-  background:#fff;border-radius:16px;padding:2rem;max-width:420px;width:100%;
-  box-shadow:var(--shadow-lg);
-}
-.modal h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:.5rem}
-.modal p{font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:1.5rem}
-.modal-btns{display:flex;gap:10px;justify-content:flex-end}
-
-/* ── Responsive ── */
-@media(max-width:700px){
-  .header{padding:0 1rem}
-  .main{padding:1.25rem .85rem 3rem}
-  .search-input{width:150px}
-  .search-input:focus{width:170px}
-  .stats-strip{flex-direction:column}
-  th,td{font-size:12px}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Villa Corsu — Calendrier des réservations</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>if(sessionStorage.getItem('vc_session')!=='6025'){window.location.replace('login.html');}</script>
 </head>
 <body>
+  <div class="page-wrapper">
+    <div class="cal-wrap">
 
-<!-- ── Header ── -->
-<div class="header">
-  <div class="logo">
-    <div class="logo-mark">VC</div>
-    <div>
-      <div class="logo-text">La Villa Corsu</div>
-      <div class="logo-sub">Gestion des réservations</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <button class="btn btn-ghost btn-sm" onclick="loadCSV()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      Actualiser
-    </button>
-    <button class="btn btn-teal btn-sm" onclick="addRow()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Ajouter
-    </button>
-    <button class="btn btn-gold btn-sm" id="save-btn" onclick="saveToGitHub()" disabled>
-      <svg id="save-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      Sauvegarder
-    </button>
-  </div>
-</div>
-
-<!-- ── Token bar ── -->
-<div class="token-bar">
-  <label>Token GitHub</label>
-  <input class="token-input" id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"/>
-  <button class="btn btn-ghost btn-sm" onclick="saveToken()">Enregistrer</button>
-  <div class="token-status none" id="token-status">Non configuré</div>
-</div>
-
-<!-- ── Main ── -->
-<div class="main">
-
-  <div class="status-bar" id="status-bar"></div>
-
-  <!-- Stats -->
-  <div class="stats-strip" id="stats-strip">
-    <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Réservations</div></div>
-    <div class="stat"><div class="stat-val" id="s-nights">—</div><div class="stat-lbl">Nuitées</div><div class="stat-sub" id="s-nights-sub"></div></div>
-    <div class="stat"><div class="stat-val" id="s-rev">—</div><div class="stat-lbl">Revenus</div><div class="stat-sub" id="s-rev-sub"></div></div>
-    <div class="stat"><div class="stat-val" id="s-guests">—</div><div class="stat-lbl">Visiteurs moy.</div></div>
-    <div class="stat"><div class="stat-val" id="s-owner">—</div><div class="stat-lbl">Jours proprio</div></div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <div class="search-wrap">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" id="search" placeholder="Rechercher…" oninput="renderTable()"/>
+      <div class="header">
+        <div class="header-left">
+          <img src="logo.png" alt="Villa Corsu" class="villa-logo-img"/>
+          <div>
+            <div class="title">Villa Corsu</div>
+            <div class="subtitle">Calendrier des réservations <span class="version-badge" id="app-version">v1.0</span></div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="header-nav">
+            <button class="hnav-link active" id="btn-cal" onclick="setView('cal')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Calendrier
+            </button>
+            <button class="hnav-link" id="btn-list" onclick="setView('list')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Liste
+            </button>
+            <a class="hnav-link" href="stats.html">📊 Statistiques</a>
+            <a class="hnav-link" href="notifications.html">🔔 Notifications</a>
+          </div>
+          <div class="nav-row">
+            <button class="nav-btn" onclick="changeYear(-1)">&#8249;</button>
+            <span class="year-label" id="year-label">2025</span>
+            <button class="nav-btn" onclick="changeYear(1)">&#8250;</button>
+          </div>
+          <button class="sync-btn share-btn-style" id="share-btn" onclick="openShareModal()" title="Envoyer le calendrier à l'employée de maison">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Share
+          </button>
+          <button class="sync-btn" id="sync-btn" onclick="syncFromSheet()" title="Recharger reservations.csv">
+            <svg id="sync-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            <span id="sync-label">Sync</span>
+          </button>
+          <button class="sync-btn" id="caledit-btn" onclick="openCalEdit()" title="Voir et éditer les réservations" style="background:linear-gradient(135deg,rgba(0,201,167,.3),rgba(0,201,167,.15));border-color:rgba(0,201,167,.5);color:#00C9A7;font-weight:600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            CalEdit
+          </button>
+          <button class="sync-btn" onclick="sessionStorage.removeItem('vc_session');window.location.replace('login.html')" title="Se déconnecter" style="color:rgba(240,238,255,.35);font-size:12px;gap:5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Quitter
+          </button>
+        </div>
       </div>
-      <select id="year-filter" onchange="renderTable()" style="background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;font-family:inherit;color:var(--ink);outline:none">
-        <option value="">Toutes les années</option>
-      </select>
-    </div>
-    <div style="font-size:12px;color:var(--ink3)" id="row-count"></div>
-  </div>
 
-  <!-- Table -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th onclick="sortBy('type')" title="Type"><span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('arr')">Arrivée <span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('dep')">Départ <span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('name')">Locataire <span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('nat')">Nationalité <span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('vis')" style="text-align:center">Pers. <span class="sort-arrow">↕</span></th>
-          <th onclick="sortBy('prix')" style="text-align:right">Prix € <span class="sort-arrow">↕</span></th>
-          <th style="text-align:center">Nuits</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+      <div class="sync-status" id="sync-status" style="display:none"></div>
+      <div class="stats-row" id="stats-row"></div>
 
-</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot tenant"></div> Locataire</div>
+        <div class="legend-item"><div class="legend-dot owner"></div> Propriétaire</div>
+        <div class="legend-item"><div class="legend-dot free"></div> Libre</div>
+        <div class="legend-item"><div class="legend-dot today-dot"></div> Aujourd'hui</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF8C00"></div><span class="legend-icon">▶</span> Arrivée (check-in)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FF8C00"></div><span class="legend-icon">◀</span> Départ (check-out)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E53935"></div><span class="legend-icon">◀▶</span> Même jour départ/arrivée</div>
+      </div>
 
-<!-- ── Delete confirm modal ── -->
-<div class="modal-overlay" id="del-modal">
-  <div class="modal">
-    <h3>Supprimer la réservation</h3>
-    <p id="del-modal-text">Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action sera définitive après sauvegarde.</p>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="closeDelModal()">Annuler</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">Supprimer</button>
+      <div class="cal-view" id="cal-view">
+        <div class="months-grid" id="months-grid"></div>
+      </div>
+
+      <div class="list-view" id="list-view">
+        <div id="list-content"></div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<!-- ── Save notice toast ── -->
-<div class="save-notice" id="save-notice"></div>
+  <!-- ── Share Modal ── -->
+  <div id="share-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,10,20,.75);z-index:200;align-items:center;justify-content:center;padding:1rem" onclick="if(event.target===this)closeShareModal()">
+    <div style="background:#1c1b2e;border:0.5px solid rgba(255,255,255,.18);border-radius:20px;padding:1.75rem;width:100%;max-width:440px;position:relative">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+        <div style="width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#6C63FF,#FF6B9D);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#f0eeff">Envoyer le planning</div>
+          <div style="font-size:12px;color:rgba(240,238,255,.5);margin-top:1px">Planning annuel à l'employée de maison</div>
+        </div>
+        <button onclick="closeShareModal()" style="margin-left:auto;background:none;border:none;color:rgba(240,238,255,.4);cursor:pointer;font-size:20px;line-height:1;padding:4px">✕</button>
+      </div>
 
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(240,238,255,.5);margin-bottom:.4rem">Email employée de maison</label>
+        <input id="share-email" type="email" placeholder="employe@email.com"
+          style="width:100%;background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.2);border-radius:9px;padding:10px 13px;font-size:13px;color:#f0eeff;font-family:inherit;outline:none"/>
+        <div id="share-email-hint" style="font-size:11px;color:#00C9A7;margin-top:.3rem;display:none">✓ Email sauvegardé</div>
+      </div>
+
+      <div style="margin-bottom:1.25rem">
+        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(240,238,255,.5);margin-bottom:.4rem">Année</label>
+        <select id="share-year"
+          style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.2);border-radius:9px;padding:10px 13px;font-size:13px;color:#f0eeff;font-family:inherit;outline:none;width:auto;min-width:130px">
+        </select>
+      </div>
+
+      <div id="share-status" style="display:none;border-radius:9px;padding:10px 13px;font-size:13px;margin-bottom:1rem"></div>
+
+      <div style="display:flex;gap:10px">
+        <button id="share-send-btn" onclick="shareAgenda()"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,#6C63FF,#8B82FF);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .18s">
+          <svg id="share-send-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Envoyer le planning
+        </button>
+        <button onclick="closeShareModal()"
+          style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.18);border-radius:10px;padding:11px 18px;font-size:13px;font-weight:500;color:rgba(240,238,255,.6);cursor:pointer;font-family:inherit">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <footer class="app-footer">Villa Corsu Calendar &mdash; <span id="footer-version">v1.0</span> &mdash; <a href="setup.html">Configuration synchro</a></footer>
+  <script src="data.js"></script>
+  <script src="calendar.js"></script>
 <script>
-'use strict';
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof APP_VERSION !== 'undefined') {
+      const v = 'v' + APP_VERSION;
+      document.getElementById('app-version').textContent = v;
+      document.getElementById('footer-version').textContent = v;
+      document.title = 'Villa Corsu ' + v + ' — Calendrier';
+    }
+  });
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  SHARE — send annual agenda to housekeeper
+// ═══════════════════════════════════════════════════════════════
+const EJS_PUBLIC_KEY  = 'hQboEnOmZ-aQ99SwJ';
+const EJS_SERVICE_ID  = 'service_33bfe78';
+const EJS_TEMPLATE_ID = 'template_kengwy1';
+const LOGO_B64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAKJAoQDASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYHBQgCBAkDAf/EAFAQAQABAwMCAgYFBgoGBwkAAAABAgMEBQYRByESMQgTIkFhcRQyUYGzCRUjN3WRFjhCUmJygpKhsRckM0OisiU2U1RjdNMYNDVzg5OUtNH/xAAVAQEBAAAAAAAAAAAAAAAAAAAAAf/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDcsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACZ4gCZgcAHMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABxqnu5T2hwAH5MglfQAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB+VOL9q835PkD87e8flXmA+oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAONXm4y5VebjPuBxnzCfMB9gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcavNxlyq835PkDhPmP2YAfUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH5V5OLm4SD88h+8AjmAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPyqPe/QHAfsx3AcgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB+V10UUzVXVTTTHnMzxDoXtd0SxPF7WNOtz/AE8miP8AOQZAYqncu3Kp4jcGlTPwzLf/APXbxdR0/KmIxs7FvzPl6u9TV/lIO0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACnd/ekBtvbevZu3tO0fVNc1bEvTZuW7FNNFrxx9anxd6uYnt2pnvEsFV1I67bhv0ztjpfa0zFrp7TqUVeL5+Kuq1HH9mV6afpem6dcyLmBp+JiV5Nybt+qzZpom7XM8zVVMR7UzMz3l2wa/07V9JLWa/FqG99K0izX9a3Z8MVUR9kertd/wC995f6B7y1KuKta6xazkxPeuj1d2qPlHN7iP3NgAFE2fRh2fcoirU9xblzL3vri/apifum3VP+L7U+jB07jzz9xT88q1/6S8AFIf8Asw9Ov++bh/8Ayrf/AKbhV6L/AE9ny1LclPyyrX/pLyAUFl+jTh2O+3d+7g0yY+r63i7x/cm2/P8ARB1c0e34tv8AWHMya4+rbzZu02/8arkf4L+Aa/xPpO7domqadC3RRHun1cTT+71VU/4kdeN47et2qN99LNTw454u5eN46Lc/1aa6Zif/ALjYABVm2ev/AEy1uqKK9Yu6Vdnyo1CxNv8A4o8VEffUsnTNR0/VMSnL0zOxc3Hrjmm7j3ablE/KaZmEb3T002Fuam5+eNrabdu3avHXftWvU3qp+2blHFU/vVpqvo54+n5d3Uun+8dY25mzE+Gmbs1U8fzfHRNNcR8/EC+Rr5VuP0gOn9XGv6Djb00uiYp+kYdPN3wxH226Yqjt51V257+9K9i9ftgblqoxszNr0DOq5ibOo8UUcxHfi79T+9NMz9gLYHG1XRdt03LddNdFcRVTVTPMVRPlMS5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIfvrpnsreluudc0PHryao4jMsx6q/T/bp7z8quY+CYANeL/S/qh01u1ZnS/dFzVtMpqmurSM6Y5458oifYqnjzqj1c9u3LObI6/wCk38/8xb/0vI2lrVExRXN+iqMeqe3eZmPFb5nn60TER/KXWj+9tl7Y3np/0LcekY+bTEfo7kx4btr+pXHFVP3TxPv5BnMa/ZybFGRjXrd6zcpiqi5bqiqmqJ8piY7TD6Nc8nYXU7pDkV6j041S9uLQIq8d7R8mnx3Ij4URx4p7882/DVPbmJiFg9Kesu1991U6dVNWka7HMV6dlVd6qo8/V1dvH5T24irtPb3gssAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABW3Vjo5tff1NWbVR+atcjiaNRxqI8VUxxEesp7eOO0e+JjjtKyQGu2gdSd7dKtXs7Z6tYt/P0uuqKMTXbMTc5jnzqq87kR5zE8XIj3Vcwv/AEjUcDV9NsalpmXZzMPIo8dq9ZriqmuPhMPjuHRdJ3DpN7SdawLGdhX44rs3aeYn4x74mPdMcTHua+avtvevQbVb24NnXL+u7Ku1xXm6bdqma8ePfM8R27eVyI+yKomIiZDZMRrp1vjb+/NBp1bQMrx0xxTfsXOIu2Kv5tdPu+feJ90ykoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMRMTExExPaYkAa/9RemGubG1+vqH0jice9biqvP0aiObd2351RRR76Z/wCzjvHaaOJiIix+j/UvReo2hfSsKYxtSsREZuBXVzXZq+2P51E+6r7p4nsnKiusvTPVdH1v/Sb0xmrD1zGmbubg2afYy6f5VVNPvqn+VR/K844qj2gvUQbo31J0nqNt2MzG8ONqePEU5+FM+1Zr+2PtonvxP3T3hOQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUD1r2Vq+ydyf6XendFNnIx+bmsYNFP6O9b/l3JpjzpmPrxH9eOJiZWv0y3tpG/dq2Nd0mvw+L2MjHqnmvHuxHeir9/MT74mJSeYiY4mOYlrbvbS9R6E9Q6N77bxrl3Z2rXIt6pgW59mxVM88RHlHnM0T7p5pniJjkNkh09F1PA1rScXVdMybeVhZVuLtm7RPaqmf8p+HnE9ncAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVnU7q5Z0TVo2ns7Tqtybru80041n2rePP23Jj3x/N7fGYBYG5twaLtnSq9U17UsbT8Sjt6y9Xx4p+ymPOqfhHMq4211z0XcXUDTdraZoeqzZ1GK5sZ16j1dNdNNNVXiponvNM+Ge6v9fwcjB1TDv70uTvvqRmx/wBH6Daqj6Jp0T38VdNPbiI78zxE/wDGtjpL07p2xXkbh127bz91alHizMmmniizHus2o91MRERz7+Ps7ILCAUAAAAAAAAAAAAHR1/SdP13RcvR9VxqMnCy7U2r1uqO0xP8AlMecT5xMRLvANdOk+qaj0i6m3+lm5Mmu7omo3PW6Jl3J7UzXMxTHwiqfZmPKK45iOKplsWrvr70+t9QNkXMbHopjWcHxZGnXPKfHx3t8+6K4iI+cUz7nT9HLqBd3ps+rC1eqqncOjzGNn0XI4rr47U3Jie/M8TFX9KJ8uYBaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADhkXrWPYuX792i1at0zXXXXVFNNNMd5mZnyh8dUz8PS9OyNR1DJtYuJj25uXr1yrimimPOZlq31P6k09SMqvF/OOXoOwMWrjIu00f6zqdcd/BRRz378cRPaPrVd+IgJluzqHuTqTq2RtLpXX9F02zPGqbiuTNNu3R74tz7o4ie/nPu4jvOH2ZNrT7+Tsnoti05+p18U61u/Lp8Vqiff4JjnxTzzxEdv63eqMhtfp5ubeelY+nZ1qvZWwaPax9Gxbn+tZlM8T4r9Xx7TPi5n4e9eW3ND0jbukWdJ0TT7GDhWY4otWqeI+c++Zn3zPefeisB0z6faRsfCvVY9y7n6tmVePP1PJ73smuZ5nmfdTz38PPzmZ7pgCoAAAAAAAAAAAAAAAANdesGLkdJ+r2m9UdItVfmfVrv0bWrFuO01Vd6p47d6ojxx/TomZ82xTB7921hbw2hqW3NQj9Dm2Zoiv326470Vx8aaoiePfxwDLYWVj5uHYzMS9Rex79um7auUTzFdNUcxMfCYl9lH+ituXNtYOq9NdwTNvWNuXqqbVNU96rHi4mI98xTV7/sro4XgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwe8t3bd2fp1Oobj1O1gY9czTRNVNVU11RHPFMUxMzLONaOrGpZPWvqNhdPNrRTXouk35valqUURVTTVHNNU01fZEc0x/OqmfdHIIxvPcG+uv2550XaWFk422seuI4uVeC15/7S/VHaZ98URzMe6JnmV29Kei+gbNtYubqNc65rVi3FNGTkRzbx+O/Fmie1Pf3+fyTvaO3dJ2roGNoeiYlGNh49PFNMedU++qqffVPnMu7qmoYOl4F3P1LLsYeJZp8Vy9eriiimPjMg7IorcPpNbQwNfjT9L0rUtYxqa/BcyrPFETP/h0Vd6vv8K8se567Ht3vV3LfjoirwXI4qp5jniY90g5j8qqpppmqqYppiOZmZ7RDHaNr2i6zfy7Ok6ni51eHXFGR6i5FcW6pjmImY7c9pBkgAAAAAAAAAAAAAAAAAa9de8e9086s7c6r6dbrjDybsYer0W44irtxzPfvNVvnjtxE2qZ85bA41+zk41rJx7tF2zdoiu3conmmqmY5iYn3xMI11Y2ta3n0+1fb9VNPrr9iasaqqPqXqfaon4e1ERPwmUK9FDdN3XumlOj59dc6joN2cK7Tc+vFvztcx7uI5o/+mC3gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfLMyLWJiXsq/V4bVm3Vcrq+ymI5mf3QCm/SY35n6dhYuwdqzVd3Fr0xZmLU812bNU+Ht9lVflE+6PFPbtKYdFen2F072da0u34L2oX5i7n5MR/tLn2R/RpjtEfOfOZVz6OmiV7u3rr/AFf1imu5cysu7Y0qm5HPgtx7M1R8qYi3H9pf4MXu7V69B2zqOs28DJ1CvDx6rtONj0zNd2Yj6scc/v47RzLVq/trq/1w16nJ1+zf0HQ6Kv0dORaqtWbVPPPsW54quVf0p/fENuQGpNG2dgdL+vmFjbju5FjSNP0ynKx8jJtV3IycrmOKpimJ7R7U9o4iaYWtkdYdW3BdjF6abH1XXZq7Rn5ducbEp/tVcc/KZhbGZg4Wb4fpmHj5Pg+r621FfHy5h9rVu3atxbtUU0UR2immOIgFV4fTrdm5730vqVu7Jv49U+KNG0mucfFpj+bXVHFVcff96xdvaFo23sCMHRNMxcDHjzos24p8U/bVPnVPxnmWRAAAAAAAAAAAAAAAAAAAGvWkRHTv0sMzT+abOk7vseut+KvtF6qZq/fN2m5TEfZchsKov0v9MyrG3dB3xpnFGfoGo0VRd47001TE0zP28XKKO39KQXoOjt7VMbW9A0/WcOrxY+djW8i3P9GumKo/zd4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjN2Yd/UNratgYv/vGTg3rNrvx7VVExHf3d5ZMBEejW3cjanTHQtBzLcW8rHx+b9MTz4bldU11Rz8JqmEuAAAAAAAAAAAAAAAAAAAAAAAAABG+qOgfwo6d67oNNmm9dy8K5FiiqeI9dEeK3P3VxTP3JIArT0Zo1yz0i03A3BpubgZWFcuWLdGVaqt11WvFNVE+GrvEcVeGP6qywAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFS636SHRnRNYy9I1Xd9eJnYd6qxkWa9JzeaK6Z4mO1nifnHaU56f712xv3b9Ov7S1WnUtOqu1WvWxartzFdPnE01001R98AkIIz1G39tHp5o1rV946xTpeFevRYt3Js3Ls1VzEzxFNumqryifcCTCrNq+kL0g3TuHC2/oO7as3U8656vHsU6Xl0zXVxM+dVqIjtEzzMxC0wAAAAARTqT1F2d0503F1HeesfmvFyr02LNf0a7e8VfE1ccW6apjtE957AlYgnTbq/076jajlafszcP50ycW1F69R9CyLPhomeOeblFMT3+xOwAAAAAYbem6NC2btzJ3FuTO+g6Xi+H11/1Vdzw8zER7NETVPeY8oBmRWeyevXSfem48bbu2t1/T9UyfF6mx+b8q34vDEzPtV24pjtE+crMAAAAAAAAAFU7i9Ivo3t7Xc3Q9Y3j9G1DBvVWMmz+bMuvwV0zxMeKm1MT84mYWPtzWdN3FoODruj5P0rTs+xTkY17wVUest1RzTPhqiKo5j3TESDvgAAAAAAAAACKbL37oW7Nx7m0LS73jydvZlOLk+1ExVM0RV4o+EVeKn50ylYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANCPyhGwI0PqBhb3wrPhw9do9XkzTHEU5NuIjmf61PE/2Zdz8nbvqdN3lqmxMy9EY2rWvpWJFU9ov249qI/rUf8jaT0kth09ROkOs6DboirOot/SsGZ91+37VMff3p+95k7K17P2fvTS9w4fjtZml5lF6KeOJ9mr2qZ5+2OYn5g9fWgn5QnfH576lYWz8S9FWJoVjxX4pmJici5ETPPxinwx98t1rm9NGp6aVb9pyKJ0mNM/OMXOe00eDxcfP3fN5U6/qWq7331l6ldpqv6nrWfNUUc8zNdyv2aY/fEQDaH8nVsD6Tq+rdRM6zzaxKZwdPmqPO5VETcqj5U8R/alu0h/RjZeN0/6Z6JtXHpoivEx4nJrpj/aXqvauVffVMpgAAAAA1U/KS/q42x+16vwam1bVT8pL+rjbH7Xq/BqBX35Nv9Ym5/2XR+LDexon+Tb/AFibn/ZdH4sN7AAAAAFN+ml/Fx3N8rP41C5FN+ml/Fx3N8rP41ANM/Qo/jHbc+V/8Gp6YPM/0KP4x23Plf8AwanpgAAAAAAAADyl9In9em9P2xf/AOaXo36OX6hdjfsPF/Dh5yekT+vTen7Yv/8ANL0b9HL9Quxv2Hi/hwCfgAAAAAAAIZ1u3rj9PemGt7pvV0xdxseacWmqfr36vZt0/wB6Y+6JTNpB+UT3/wDTde0rp5g3+bOBTGbnxTPndqji3TPyp5nj+lAKy9EnqTkbR6642bqmXVOHuC7OJqNdVXaa7tXNNyflXMfdMvSx44ZOLm4FWPcyLF/Gm9bpv2Kq6ZpmuiZniun7Y5ieJj7HqD6MO/aeofR3R9YvXYr1DHt/Q8+Pf663ERNX9qOKvvBZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADzU9M/YH8Bus+bfxbEW9L1yJz8XwxxTTVVP6SiPlXzPyqh6VqG9ODYH8MujmRqmHYi5qe36pzbXEc1VWuOLtMcefs+1x9tINR6etOTHou1dLJrvfTfzj4Yud+PoP8AtPDz/X7cfYkfoG9P/wCFPVidyZuP49N27RF+Jqj2asirmLcfHj2qvuhrq9O/RI2BHT/ozpmNk4/qtU1OPp+fzHtRXXEeGmf6tPhj94LdAAAAAAaqflJf1cbY/a9X4NTatqp+Ul/Vxtj9r1fg1Ar78m3+sTc/7Lo/FhvY0T/Jt/rE3P8Asuj8WG9gAAAACm/TS/i47m+Vn8ahcim/TS/i47m+Vn8agGmfoUfxjtufK/8Ag1PTB5n+hR/GO258r/4NT0wAAAAAAAAB5S+kT+vTen7Yv/8ANL0b9HL9Quxv2Hi/hw85PSJ/XpvT9sX/APml6N+jl+oXY37Dxfw4BPwAAAAAAAYvduuYO2dsaluDU7tNrD0/GryLtUzx2pjnj5z5fe8s7FOtdYOtFNNczVqO5NU9qY/3dNVXf7qKI/dS20/KHb//ADXs7Ttg4N+KcnV6/pGbFM96ceifZif61f8AhTLTPaWPvXDybet7Tsbgx79uaqLebplF6mqntxMRct947efcG2Pp59LsLTOnu2Nx6FiRbs6Dbo0q/FEcfoJji3VPyqiY/toP+T+3/wDwe6k5Ozs2/NODuC3+giZ7U5NETNP96nxR90Kp1jVut2s6de03V9T6h6jg344u42VfzLtq5HPPFVNUzE9/tQ3TcvVNt7hxs6x67C1LT8im7R46Zort3KJiY5jtMd48gew4jPS3duHvrp/o26sKYi3qGNTcro/7O55V0z8qomEmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfPJsWsnGu49+3Tcs3aJouUVRzFVMxxMT9z6APPraXQe9R6Xl3ZWRi1VaFpuR+dKqpj2asPnxW6efjPFH3S9BaYimIiIiIjtEQ6dGl6fRrV3WaMW3GoXcenGuX4j2qrdNVVVNPyiapn73cAAAAAAAaqflJf1cbY/a9X4NTasBon+Tb/WJuf9l0fiw3sAAAAABTfppfxcdzfKz+NQuQB4zj2YAeM7009C3+Ljtn5Xvxq1yAAAAAAAPKX0if16b0/bF/8A5pQF7MAPGdsb+Ty/X1kfsPI/EsvQsAAAAAfPJvWsbHuZF+5TbtWqJrrrqniKaYjmZn7n0AeVPXTeGZ1Q6yarrWNTVfoysqMTTbVPefVUz4LUR8/P51S9I+iWy7HT/pfoe1rVNMXcXGirJqiOPHfq9q5V/emf3JmAPPr8oBsb+D3VWxunEs+DC3BY8dyaae0ZFvimvn4zHhn970FAaZ/k6eoH/wAX6cZ9+ffqGnRVPyi7RH/DV/ebmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADC7i3btTbc0xuLc2i6PNcc0xn59qx4vl46o5Bmh0tG1fSdaxIy9H1TC1HHnyu4mRTdo/fTMw7oAOvqGdhadiV5moZePh41uOa71+5FuimPjVPaAdgYPb+8do7iv12Nv7q0PV71v69vB1C1fqp+cUVTMM4ADr6lnYWm4F/UNRzMfDw8e3Ny/kZFyLdu1REczVVVVxERH2yDsCH2OqfTG/eps2Oo2z7tyueKaKNbxqqqp+ERWltm7bvWqL1m5Rct1x4qa6KuYqj7YmPMHMAAYXce7dqbamince5tF0abneiM/PtY/i+Xjqjl39J1TTNXxIzNJ1HD1DGntF7Fv03aJ/tUzMA7YPjnZeLgYd7Nzsmzi4tiibl29eriii3TEczVVVPaIj7ZB9h0NB1rRtf02jUtB1bA1XBrqmmnJwsii9aqmJ4mIqomYmYn4vnuPcOgbbwqc3cWuaZo+LXXFum9n5dFi3NU9/DFVcxHPaewMmONq5bu2qLtqum5brpiqiumeYqifKYn3w5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAweLu7buVvDI2jj6pau63jY/0i9i001c26OaY71ceHn2qfZ554nnjhnGvvU+mNmelDtHdlu3Taw9dtxhZdc1cU1XP9lMz9nFNdmf7LYIAAAAAAAAAAAAFK+l11R1LpzsLGxtuf9Y9cv/Q8CqIiqbXb2rkRPnVHMRHxmPsRvpZ6Le0adGo1nqfayt1boz4i/m3MnMuxRarqjvTHhqia5jymqqZ7+XCN+ndbr03fnS3dWZETpGDqXhyJnyiYu2rk8/Omir9za7GvWsnHt5Fi5TctXaIrorpnmKqZjmJj7gVj0u6E7G6bb2z9zbUtZmL9MxYx4w7t+q7bs+1zNVM1c1d+0e1M/DzWkAMXu3XcDbG2NS3DqdzwYenY1eRen3+GmOeI+M+TVnpZsjVfSTz8jqR1Szs7+C9OTXa0bQse9VatTTTPE1TMd+PdMxxVVMT3iIiF4+k/pmdq/QPd+Fp1FdzInT6rlNFEczXFExVVEfdTLA+hZrWnat6PWgWcGuibunxcxcq3E96LkVzPePjFUT94MXvb0Vumufpc3Nn4mVtPXbEeLDz8PMvVeC5H1fFTXXPbn308VfF++ij1N3DuK5rnTzftXi3Zti56q7fnzybUT4fFP21RPHM++JifPlfTUzoPVG5PTZ6i7p0av1mj49ivHuXaPqV3P0VEd/KeZtVyDbNAPSN/ULvn9h5X4cp+gHpG/qF3z+w8r8OQUV6KHRPphvfoNpetbn2rYztSybuTRdyfpF63XMU3q6aePBXERxEQ/fRiytR6f+kjvDovj6jlZ23Me3Xk4NF+vxfR5iLdccfZzTc4njtM08oT0P3j1/2p6PlrUtmbS2zn7UwYyb1OVfiuvK4i7VNyfBTep58NXi49jyj3rJ9BvbtrWrWudYNX163rO5NcvV2Miminj6JxVE1U1cxHtVezPbtFMRxyDaB1tWv3cbS8vJsUesu2rFddFP8AOqimZiP3uyA0h9FDanT3rDqm5dc6n3fz7vC7mzVGFlZly1NNnw/WoopqiaoieaffFMREcR5tk+mHRDYfTbdeduDaONnYdWZjxj1YtzLqu2bcRPMzT4uauZ7edU/DhXnWD0Utt7n1nI3PsvV8jamvXLk3+LUc41V3z8URHFVuZn30zx7/AAsT6KvUHqJp/VHWOjHUvLualn6fYqu4uXduesuR4PDM0+snvcpqpqiqJnvHE8/ZAbSId1v/AFO7v/Y+T+HKYof1tpqq6P7uppiZmdHye0R/4dQK39A3+LlpX/ncv8WWA/KKfqY039sW/wAOtnvQMqpn0c9MiKomac7LiYifL9LKP/lFa6I6OaVbmqmK69ZtxTTz3q/R1+X2g2H2r/1X0r/yVn/khkmO2vTVTtnS6aomKow7MTE+6fBDIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAp/0t9t1a30pu6lj25qy9Fv05lM0x7Xq/q3I+URMVT/UTzpfuSnd3T/RdwxVRNzLxaZvxR5U3o9m5EfKuKoZvVcDF1TS8rTM61TexcuzXYvW58qqKomKo/dMqM9FTOytA1fdXS7VLviytHy67+PPExFdvxRRXMc+VPPq6o/8AmAvwAAAAAAAAAAAEW6p7E0LqNszM2tuC1VVjZERVRdt8RcsXI+rcon7Y/wAe8KL0Hb3pO9KMKnb21qNub/2/jz4MKMy7FnIs2/dT7Vyjjj7PFXER5cNnQFO9H49IDO3hc1nqZRtvS9EqxarVGk4NfiuUXeYmLnMTXE+UxPNyfPtELiAH5XTTXRVRXTFVNUcTExzEx9jWzW+inUHp1vPO3d0H1vAs4uoVzczdual2x658+KJ8uOZ7RM0zT5RVx2bKANaNTself1Awbm39S0/a+wdPv0+qys7Gv+tv10T9bweC7cmOY93sz/Shb3RXpjt/pXtCjQNDiu9cuVetzMy7EesybvH1quPKI8oj3R98pyAIh1q0bUtxdJN16Fo+N9K1HP0q/j41nx00esuVUTFMeKqYpjmffMxCXgKo9FTZ2vbL6G6Xtjdmm04Wo2buTN/Gqu270RTXerqjmqiqqmeaZj3+9BOnnTPffSb0gdRv7Q0adR6da/MV5VNOZZonBrnmYmKK64qnwTM/VieaZ484bJADHbmx9Uy9vahi6Jm2sHUr2PXRi5N23NdNq5MTFNU0xMc8SyIDWzHzfS92xixpEaDtDeUUR4Lep1ZFNuv4VVxNy14u39Hn4yzno+9IN0aDvjWuqHUnUsTN3dq9E24s4ne1i2545jntEzxTTTxHaIjznle4A+WZj2MzEvYmTbpu2L1uq3coq8qqZjiYn7pfUBqzh9L+t/RfWtUq6NXtH3HtjPvTeo0fVLkU12Kp+zmuiO0cR4orjmIjmO3LtaZ0k6r9VN7aVubrll6Xp+k6Tci9i6BptXipquRMT7UxVVERPEcz46pmI47Q2cAKYimIiIiIjtEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA156927nT/rHtfqpiUVRhZNyMLVeOeJjwzTMzEecza5493NqGwyL9Vdp2N7bC1Tbt3wxdyLXixq5/3d6n2qKufdHiiIn4TMe8ElsXbV+xbv2blNy1cpiuiumeYqpmOYmHNTvoq7uvaxsm9tbVZro1nbdz6Jdt3OfF6nmYt8/Gnw1UcR5eCPtXEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADXXq3YvdKetWl9TsC1X+ZNYq+i6xbtxzxVPHin7OaoiK4j31W6ufNsNi5FjLxbWVjXqL1i9RFy1coq5prpmOYmJjziYYXqDtfA3ntDUNu6jERay7XFFzjmbVyO9FcfGJ4n/AA96qfRk3VqGn3tQ6Ubrqm1rWh11U4nrKp5u2Innw0zPeYp5iaftoqjjtAL0AAAAABDenm6tR3FuPeunZtnFt2tB1qMDFmzTVFVdv6Pauc181TzVzcny4jjjsmSjtNu9UNlb83xd0npTkbj07WtZjPxsy3ruHjRNH0e1b48FyrxedE+cQubRsjMy9JxMnUdPnTsy7aprv4k3abs2K5jvR46e1XE9uY7SCC9bupVHTzE0m5bwqs27lZUV5VFEczYwqJici/PwpiY7/bMLCx71rIsW79mum5auUxXRVTPMVUzHMTCotc6cbm3pvjcOu6ruHUttYldidHwMbFt4mRF/CmIm5XV6yi54Jrrme0cTxTHKT9ENL3Lt/Y1vbO5rVc3dHv3MPCy671Fc5mJRP6G7PhmZifDxExVxPMeQOv1M3JuzT947X21tW/oWLd1inKqvZGqYl2/TRFmimqIppt3bfnzPnMpHs6jdtFjI/hXqegZ9yao9RVpWDdx6aY47xVFy7c5ny8phAeu+0srcO69o6jXsL+Guk6d9LjMwfW41PE3KKYt1cZFyime8T5Sk3SXBx9L0zLwcLprc2Jixdi5TjzcxKqb9UxxNURj3K4jjiI78A7fVHM3Zpm18nVdqZeiWLuDYu5GRTqeHdyKblFFE1RTT6u7b8M8x5zM/J0+jmq7x1/aODuDdWVoNyjUsSzk41rTMK7YmzFdPimmubl254vOO8ce9n974WTqWzNa0/CtetycnAv2bNHiinxV1W5iI5niI7z73S6V6XnaJ0225pGp2Po+dh6bYsZFrx01eCumiImOaZmJ7x5xMwDr9TNzZ+2bOgV4FnGuTqOuYun3vX01T4bd2qYqmniY4q7dpnmPhKWV+LwVeCYirjtzHblCureharruPtqnSsX6ROFuHDzMj9JTT4LNuqZrq9qY5458o5n7ITYFOaZuXq3kdXc7Y13U9j+rwdNsalcv06NlRNy3cu10erj/Wu1URR9bvHfyXGr3StuazY9ITXN1XcPw6PlbdxMKzk+tonxXqL12qqnw8+KOIqpnmY47+awgQ3pDurUd37c1DUdTs4tm7ja1n4FEY9NVNM27GRXbomfFVPtTFMc+7nyiGa3pr+Ltfampa/mRNVrCsVXfBHeblX8miPtmqriI+Mo10O2/q+29ranha1ifRci/r+pZluj1lFfis3cmuu3VzTMxHNMxPHnHviHw6v7W3BvbUNC2/hZOTpWi2r/5wz9SszZrqi7ZmJsWot3Iq8XNftzM0zT7Ee/gGT6N7wu732Fhazm4s4WqUTXjaniTExOPlW58NyjifjHMfCYTFVXTfZm6tkdTtYm5qObuHQdwY8ZmVqGTGParsZ1E+DibduKOYro8Pemjzp7z3WqArbfu8N1YnUvSNmbcnbmHVnYFzMpyNXm5X9JroqiJsW6bdVM01cT4vFPi7eVM8SslQG7unm5fz7vKKNnUbhyNfzKMzStftanaxr+mVUU0xboqmv26KbdVPij1cVRMTPNPeQXlouoWdRwvWW8nCv3rVU2cqMTIi9RavU9q7fi7TzE9uJiJ+2Id1A+hGja7t3p3i6DuTTqcXVMO7dpycijIpvUZ9dVc11ZNMxPMeOapmYqimYnnt5J4Djdqmi1XXHnTTMwqnpdr/AFQ3foml7jyNX2Tj6dl3KqrmHRpOT6+LdNyaZpi5OTNPi4p8/Dx8Fq36Zqs100xzM0zEfuVT0R6Sbd25tvRtS1nZmk4u7caq5cu5fqbdd+mua6+KvWU88z4Zjyn3gte7VNFquuPOmmZhRmk9Ud/4WydF39uGxtnN0DUtQtYdzFwMa/Yy8eLt/wBTTXFVd2um7xVxM08U9ueJXlfpmqzXTTHMzTMR+5rpofR3cOh7U2jrtnD1LU9c0fUPpObt3N1ibuJdom5V7Vqmq5Nm3doiYrpmOI5iYnzBscqTTNzdS9y7w3fp+haps3TMDQdVjAtU5+l5F+9cj1Nu54pqpyaI/wB5x2p9y2qJmqimqaZpmY5mmeOY+HZrxldP6qOom9dU3F0N/hnb1TVoydPz/X6dPFj1Fqjw8Xr1Nce1TVPHHvBf2kRqFOl41Oq3sW/nxap+kXMW1VbtV18d5opqqqmmn7ImqfnKutc3L1Azur2pbN2rk7Yw8TT9IxdQqualgX79y7VduXaJpiq3eoimI9XH8mfNYG3arlehYU3dJuaRVFmmPoNyuiqrHiI4iiZt1VUTxH82Zj4q01nH3loHXLWN1aVsbP3DpuoaFh4Vu5i5+JZ8F21dvVVRVF67TVxxXT3iJBKOnu787WtU1jbe4dNsabuLRarf0q1j3pu2L1q5EzbvWqpiJ8NXExxVHMTEx380yV/012xr1ndev773ZbxMXWNbosY9vBxbs3aMPFsxV4KKrnEeOuZrqmqYiI78RzxysAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABR/pK7P1LGvYXVTaMTZ13Qpi5lRbieb1in+VMR9bwxzFUT50TVz5RC8H5XTTXRNFdMVU1RxMTHMTAI10x3jp2+9nYe4dPmKfW0+DIs+LmbF6Ijx0T8ueYn3xMT70ma1apay+gHVP8AO2Jau3NhbhuxRkW6aZqjEud54j408zNP86jxR3mnmNkMPJx8zEs5mJet38e/bpuWrtFXNNdNUcxVE++JiQfUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGI3jt3S917czNA1mxF7Dy6PDVH8qmfOmqmfdVE8TE/BRXSzcmp9IN6VdLt8ZMTo1+ua9G1KrmLdMVT2iZnypqnnn+bVz7p5jYxD+rWwNJ6h7WuaRqPFnJo5rwsymnmvHucefxpnymn3x9kxEwEwFC9F+oWrbZ1/8A0V9Sq5x9UxqotaZnXJ9jJo8qKJrnz5/k1T5/VniqO99AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgvWPprpHUbb04mXFONqWPE1YObFPtWavsn7aJ98ffHeEA6T9T9Y21r1PTXqrzh6pYiKMHU71XsZNHlTFdc9p547V+/jiriqO98od1V6d6D1E0CdO1a36rKtRM4ebbpibmPXPvj7aZ7c0+U/CeJgJiNdNl9QNzdJdbs7F6p03L+lTxTputURNdMUR2iJnzqoj+9T5cTExxsNiZOPmYtrKxL9u/Yu0xXbu26oqprpnymJjtMA+oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMPvDbGh7u0O7o2v4FvMw7nfirtVRVHlVTVHemqPtj4x5TKgrmLv/ANH7NryMH1+59gVXOa7VU/pMTxT5zx9Sf6UexVz3iJmONlX5coouUVW7lNNdFUcVU1RzEx9kgjuwN7bc3zo8ant7PpyKI49dZq9m9Yqn+TXT5xPae/lPHaZSNRm/eiOVpurzu/pLqE6BrVrmucGirw2L3vmmnntTzx9Srmie31YfTYXXW3a1SdrdT9Oq2zrtqYom/comnHuzzxEz5+Dnz570TETPijtALvHCzdt37NF6zcouWrlMVUV0Vc01RPlMTHnDmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAju+9k7Z3tpk4G4tLtZVMRPqr0ezdszPvorjvHy8p98SkQDXS9sjqv0ivV5fT7U69z7diqaqtJyafFcojv5URMcz387cxMz508Jj0/wCveztx3vzfrM17Z1amrwV42fVxb8XPHEXJiI5+FUUz8JW0h/UHpns3fVqr8/aRbqy+OKc2x+jyKeI4j24+tEc+VXMfAEvpqpqpiqmYqpmOYmJ7S/WvMdN+rnTav1vTjc8a7pNE9tJz5iJiOeZiKap8HzmmqiZ58mQ0D0iMTCzaNJ6jbY1PbGfx7Vz1NdVuY/neCYiuImeY7RV8wXsMPtjdO3Nz4sZO39awdSt+GK5ixeiquiJ8vFT9amfhMRLMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMfruiaPr2FVha1peHqONV/u8mzTciPjHMdp+MMgApTc/o47Sysic/a2paltjOiYm3Vj3Ju2qJ98xTMxXE/KuIj7GHnR/SN2V4p0vWtP3lg0TxRayaoquzT/Oq8fhr5+EXKmwYCgbPpB6voV+jG6gdONY0iYp4ryLETMVVfbTRcimOP7c/el2gdfOl+rUU+LX6tOuz/us3HrtzHzqiJo/4ln10010VUV0xVTVHExMcxMIhr/S/p7rtqq3qO0NImap5m5YsRYuTP9e34av8QZjSN07Z1iiKtK3DpOdE/wDd8y3cn90SzCmNb9GrptnzFWHTq2lTHuxsvxRPz9bFc/umGKj0dMzTaJo2x1O3BpNHuo4mY/4K6P8AIF+DX6jo/wBX8K5NWn9ZM+79kZF6/MfumqqHbt7K9InHiIx+p2j1xH/a2Yqn/GxIL2FFztT0kqo4q6k7eiP6ONRE/wD6z4X+nPXnN5jM6r49qJ8/o3jon7vDRSC+3yycnHxbfrMm/as0fzrlcUx++VCWOhvUPIn/AKT6065NM/Wporv18/3r0f5Pra9GHbN+9F/WN07hz70/Xriu3TNX96mqf8QWZrXVDp7o01Rn7w0emun61FrIi9XHzpo5n/BA9c9JXYWLXXY0fG1fWr/la9Rjerorn7Oa5iqP7ss5pHQPpZp1Vq5/Bycu7b7+PKyrtcVT8afFFM/LjhPNF29oGieL8zaHpmm+KOKvomLRa5j4+GIBEOkG9d073nO1DVtpXNt6Zapopxacia6ruRXPMzVE1U0x4IiI/k95nz7LCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//Z';
+const SHARE_EMAIL_KEY = 'vc_emails_v2';
 
-// ══════════════════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════════════════
-const GH_OWNER  = 'villaCorsu';
-const GH_REPO   = 'admin';
-const GH_FILE   = 'reservations.csv';
-const GH_BRANCH = 'main';
-const TOKEN_KEY = 'vc_admin_token';
+const MONTHS_EMAIL = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const WDAYS_EMAIL  = ['L','M','M','J','V','S','D'];
 
-// ══════════════════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════════════════
-let rows     = [];   // all rows
-let fileSha  = null; // current GitHub file SHA
-let dirty    = false;
-let sortKey  = 'arr';
-let sortAsc  = true;
-let delIdx   = null; // row index pending deletion
-
-// ══════════════════════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════════════════════
-const pad = n => n < 10 ? '0'+n : String(n);
-const isOwner = name => name.toLowerCase().includes('propriétaire');
-
-function parseDate(s) {
-  if(!s) return null;
-  s = String(s).trim();
-  let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
-  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
-  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
-  return null;
+// ── Modal open/close ─────────────────────────────────────────
+function openShareModal(){
+  // Populate year selector from BOOKINGS
+  const ys = new Set();
+  BOOKINGS.forEach(b=>{ ys.add(b.arrDate.getFullYear()); ys.add(b.depDate.getFullYear()); });
+  const sel = document.getElementById('share-year');
+  const cur = new Date().getFullYear();
+  sel.innerHTML = '';
+  [...ys].filter(y=>y>2020).sort().forEach(y=>{
+    const o=document.createElement('option'); o.value=y; o.textContent=y;
+    if(y===cur) o.selected=true;
+    sel.appendChild(o);
+  });
+  // Restore saved staff email
+  try{
+    const saved=JSON.parse(localStorage.getItem(SHARE_EMAIL_KEY)||'{}');
+    if(saved.staff) document.getElementById('share-email').value=saved.staff;
+  }catch(e){}
+  // Hide status
+  document.getElementById('share-status').style.display='none';
+  // Show modal
+  const ov=document.getElementById('share-overlay');
+  ov.style.display='flex';
+  setTimeout(()=>document.getElementById('share-email').focus(),100);
 }
 
-function nights(arr, dep) {
-  const a = parseDate(arr), d = parseDate(dep);
-  if(!a || !d) return 0;
-  return Math.max(0, Math.round((d - a) / 86400000));
+function closeShareModal(e) {
+  document.getElementById('share-overlay').style.display = 'none';
 }
 
-function fmtNights(n) {
-  return n > 0 ? n + ' n' : '—';
+// ── Email HTML builders (same as notifications.html) ─────────
+function shareWrapHtml(body, title){
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/></head>'+
+    '<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif">'+
+    '<div style="max-width:580px;margin:20px auto;background:#ffffff;border-radius:10px;overflow:hidden">'+
+    '<div style="background:linear-gradient(135deg,#6C63FF,#FF6B9D);padding:18px 28px 20px">'+
+    '<table cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>'+
+    '<td style="vertical-align:middle;padding-right:14px">'+
+    '<img src="'+LOGO_B64+'" alt="Villa Corsu" style="width:54px;height:54px;object-fit:contain;background:#fff;border-radius:50%;padding:5px;display:block"/>'+
+    '</td><td style="vertical-align:middle">'+
+    '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.75);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">La Villa Corsu</div>'+
+    '<div style="font-size:18px;font-weight:800;color:#fff">'+title+'</div>'+
+    '</td></tr></table>'+
+    '</div>'+
+    '<div style="padding:24px 28px">'+body+'</div>'+
+    '<div style="padding:12px 28px;background:#f8f8f8;font-size:11px;color:#bbb;text-align:center">'+
+    'Villa Corsu · Laetitia & Fred</div>'+
+    '</div></body></html>';
 }
 
-function dateSort(a, b) {
-  const da = parseDate(a) || new Date(0);
-  const db = parseDate(b) || new Date(0);
-  return da - db;
-}
-
-function setDirty(val) {
-  dirty = val;
-  document.getElementById('save-btn').disabled = !val;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOKEN
-// ══════════════════════════════════════════════════════════════
-function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
-
-function saveToken() {
-  const val = document.getElementById('token-input').value.trim();
-  if(!val) { showStatus('err', 'Collez votre GitHub Personal Access Token'); return; }
-  localStorage.setItem(TOKEN_KEY, val);
-  updateTokenUI(val);
-  showNotice('ok', '✓ Token enregistré');
-}
-
-function updateTokenUI(tok) {
-  const el = document.getElementById('token-status');
-  const inp = document.getElementById('token-input');
-  if(tok) {
-    el.className = 'token-status ok';
-    el.textContent = '✓ Configuré — sauvegarde activée';
-    inp.value = tok.slice(0, 8) + '…';
-  } else {
-    el.className = 'token-status none';
-    el.textContent = 'Non configuré — lecture seule';
+function shareCalendarHtml(year, bookings){
+  const css='<style>'+
+    '.ec{font-family:Arial,sans-serif}'+
+    '.mh{font-size:13px;font-weight:700;color:#6C63FF;padding:5px 0 4px;border-bottom:2px solid #6C63FF;margin-bottom:5px}'+
+    '.mw{display:table;width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:16px}'+
+    '.mr{display:table-row}.mc{display:table-cell;width:14.28%;text-align:center;padding:2px 1px;font-size:11px}'+
+    '.dh{font-weight:700;color:#ccc;font-size:9px;text-transform:uppercase;padding:3px 0;display:block}'+
+    '.d{border-radius:3px;padding:4px 1px;line-height:1;display:block}'+
+    '.f{color:#ccc;background:#f7f7f7}.b{background:#6C63FF;color:#fff;font-weight:700}'+
+    '.ci{background:linear-gradient(to right,#f7f7f7 35%,#FF8C00 35%);color:#fff;font-weight:700}'+
+    '.co{background:linear-gradient(to right,#FF8C00 65%,#f7f7f7 65%);color:#fff;font-weight:700}'+
+    '.bt{background:#E53935;color:#fff;font-weight:700}'+
+    '</style>';
+  let html=css+'<div class="ec">';
+  for(let m=0;m<12;m++){
+    const mS=new Date(year,m,1),mE=new Date(year,m+1,0,23,59,59);
+    const mBk=bookings.filter(b=>b.arrDate<=mE&&b.depDate>mS);
+    if(!mBk.length) continue;
+    let dow=mS.getDay(); dow=dow===0?6:dow-1;
+    const ld=new Date(year,m+1,0).getDate();
+    html+='<div class="mh">'+MONTHS_EMAIL[m]+' '+year+'</div>';
+    html+='<div class="mw"><div class="mr">';
+    WDAYS_EMAIL.forEach(d=>{ html+='<div class="mc"><span class="dh">'+d+'</span></div>'; });
+    html+='</div>';
+    const cells=[];
+    for(let i=0;i<dow;i++) cells.push('<div class="mc"></div>');
+    for(let d=1;d<=ld;d++){
+      const t=new Date(year,m,d).getTime();
+      let cls='f',ci=false,co=false;
+      for(const b of mBk){
+        const at=b.arrDate.getTime(),dt=b.depDate.getTime();
+        if(t===at) ci=true; if(t===dt) co=true; if(t>=at&&t<dt) cls='b';
+      }
+      if(ci&&co) cls='bt'; else if(ci) cls='ci'; else if(co) cls='co';
+      cells.push('<div class="mc"><span class="d '+cls+'">'+d+'</span></div>');
+    }
+    for(let i=0;i<cells.length;i+=7) html+='<div class="mr">'+cells.slice(i,i+7).join('')+'</div>';
+    html+='</div>';
   }
+  return html+'</div>';
 }
 
-// ══════════════════════════════════════════════════════════════
-//  GITHUB API
-// ══════════════════════════════════════════════════════════════
-const API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
-
-async function loadCSV() {
-  showStatus('info', '⏳ Chargement depuis GitHub…');
-  setTableLoading(true);
-  try {
-    const tok = getToken();
-    const headers = { 'Accept': 'application/vnd.github+json' };
-    if(tok) headers['Authorization'] = 'Bearer ' + tok;
-    const res = await fetch(API + '?ref=' + GH_BRANCH + '&t=' + Date.now(), { headers });
-    if(!res.ok) throw new Error('GitHub API ' + res.status + (res.status===404?' — fichier introuvable':''));
-    const json = await res.json();
-    fileSha = json.sha;
-    const raw  = atob(json.content.replace(/\n/g, ''));
-    const text = new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c => c.charCodeAt(0))));
-    rows = parseCSV(text);
-    setDirty(false);
-    renderTable();
-    updateStats();
-    populateYearFilter();
-    showStatus('ok', '✓ ' + rows.length + ' réservations chargées');
-    setTimeout(() => document.getElementById('status-bar').classList.remove('show'), 3000);
-  } catch(e) {
-    showStatus('err', '❌ ' + e.message);
-    setTableLoading(false);
-  }
+function shareAgendaHtml(year){
+  const bk=BOOKINGS
+    .filter(b=>!b.isOwner&&(b.arrDate.getFullYear()===year||b.depDate.getFullYear()===year))
+    .sort((a,b)=>a.arrDate-b.arrDate);
+  if(!bk.length) return shareWrapHtml('<p style="color:#888">Aucun séjour locataire pour '+year+'.</p>','Planning '+year);
+  const fmtS=d=>d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+  const rows=bk.map((b,i)=>
+    '<tr style="background:'+(i%2?'#fff':'#fafafa')+'">'+
+    '<td style="padding:9px 11px;font-size:14px;font-weight:700;color:#333;text-transform:capitalize;border-bottom:1px solid #eee">'+b.name+'</td>'+
+    '<td style="padding:9px 11px;font-size:13px;color:#555;border-bottom:1px solid #eee">'+fmtS(b.arrDate)+'</td>'+
+    '<td style="padding:9px 11px;font-size:13px;color:#555;border-bottom:1px solid #eee">'+fmtS(b.depDate)+'</td>'+
+    '<td style="padding:9px 11px;font-size:13px;color:#555;border-bottom:1px solid #eee;text-align:center">'+b.nights+' n</td>'+
+    '<td style="padding:9px 11px;font-size:13px;color:#555;border-bottom:1px solid #eee;text-align:center">'+b.vis+' p</td>'+
+    '</tr>'
+  ).join('');
+  const body=
+    '<p style="margin:0 0 4px;font-size:20px;font-weight:700;color:#333">Planning '+year+'</p>'+
+    '<p style="margin:0 0 22px;font-size:13px;color:#888">'+bk.length+' séjour'+(bk.length>1?'s':'')+' — sans les prix</p>'+
+    '<p style="margin:0 0 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#bbb;border-bottom:1px solid #eee;padding-bottom:5px">Calendrier</p>'+
+    shareCalendarHtml(year,bk)+
+    '<p style="margin:18px 0 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#bbb;border-bottom:1px solid #eee;padding-bottom:5px">Liste des séjours</p>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">'+
+    '<tr style="background:#6C63FF">'+
+    '<th style="padding:8px 11px;text-align:left;font-size:10px;color:#fff;text-transform:uppercase">Locataire</th>'+
+    '<th style="padding:8px 11px;text-align:left;font-size:10px;color:#fff;text-transform:uppercase">Arrivée</th>'+
+    '<th style="padding:8px 11px;text-align:left;font-size:10px;color:#fff;text-transform:uppercase">Départ</th>'+
+    '<th style="padding:8px 11px;text-align:center;font-size:10px;color:#fff;text-transform:uppercase">Nuits</th>'+
+    '<th style="padding:8px 11px;text-align:center;font-size:10px;color:#fff;text-transform:uppercase">Pers.</th>'+
+    '</tr>'+rows+'</table>';
+  return shareWrapHtml(body,'Planning '+year+' — Villa Corsu');
 }
 
-async function saveToGitHub() {
-  const tok = getToken();
-  if(!tok) {
-    showStatus('err', '❌ Configurez votre GitHub Token pour sauvegarder');
-    document.getElementById('token-input').focus();
+// ── Send ─────────────────────────────────────────────────────
+async function shareAgenda(){
+  const dest=document.getElementById('share-email').value.trim();
+  const year=+document.getElementById('share-year').value;
+  const status=document.getElementById('share-status');
+  const btn=document.getElementById('share-send-btn');
+  const icon=document.getElementById('share-send-icon');
+
+  if(!dest){
+    status.style.display='block';
+    status.style.cssText='display:block;background:rgba(255,107,157,.12);border:0.5px solid rgba(255,107,157,.3);border-radius:9px;padding:10px 13px;font-size:13px;color:#FF6B9D;margin-bottom:1rem';
+    status.textContent="❌ Renseignez l'email de l'employée de maison";
+    document.getElementById('share-email').focus();
     return;
   }
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<svg id="save-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .7s linear infinite"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sauvegarde…';
-  showStatus('info', '⏳ Envoi vers GitHub…');
-  try {
-    const csv   = generateCSV();
-    const bytes = new TextEncoder().encode('\uFEFF' + csv);
-    let binary  = '';
-    bytes.forEach(b => { binary += String.fromCharCode(b); });
-    const b64 = btoa(binary);
-    const payload = { message: 'Mise à jour reservations.csv — Villa Corsu Admin', content: b64, branch: GH_BRANCH };
-    if(fileSha) payload.sha = fileSha;
-    const res = await fetch(API, {
-      method: 'PUT',
-      headers: { 'Authorization': 'Bearer '+tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-      body: JSON.stringify(payload),
+
+  // Save email
+  try{
+    const saved=JSON.parse(localStorage.getItem(SHARE_EMAIL_KEY)||'{}');
+    saved.staff=dest;
+    localStorage.setItem(SHARE_EMAIL_KEY,JSON.stringify(saved));
+    const hint=document.getElementById('share-email-hint');
+    hint.style.display='block';
+    setTimeout(()=>hint.style.display='none',1500);
+  }catch(e){}
+
+  btn.disabled=true; icon.style.animation='spin 0.8s linear infinite';
+  status.style.cssText='display:block;background:rgba(108,99,255,.12);border:0.5px solid rgba(108,99,255,.3);border-radius:9px;padding:10px 13px;font-size:13px;color:#a39dff;margin-bottom:1rem';
+  status.textContent='⏳ Génération et envoi du planning '+year+'…';
+
+  try{
+    // Wait for EmailJS SDK
+    let t=0;
+    while(typeof emailjs==='undefined'&&t++<30) await new Promise(r=>setTimeout(r,100));
+    emailjs.init(EJS_PUBLIC_KEY);
+
+    const html=shareAgendaHtml(year);
+    const kb=(html.length/1024).toFixed(1);
+    await emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID,{
+      to_email: dest,
+      subject:  'Planning '+year+' — Villa Corsu',
+      message_html: html,
     });
-    if(!res.ok) { const e = await res.json(); throw new Error(e.message || 'GitHub API ' + res.status); }
-    const result = await res.json();
-    fileSha = result.content.sha;
-    setDirty(false);
-    showStatus('ok', '✅ Sauvegardé sur GitHub — ' + rows.length + ' réservations');
-    showNotice('ok', '✅ Sauvegardé !');
-    setTimeout(() => document.getElementById('status-bar').classList.remove('show'), 4000);
-  } catch(e) {
-    showStatus('err', '❌ ' + e.message);
-    showNotice('err', '❌ Erreur de sauvegarde');
-  } finally {
-    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Sauvegarder';
-    btn.disabled = !dirty;
+    status.style.cssText='display:block;background:rgba(0,201,167,.12);border:0.5px solid rgba(0,201,167,.3);border-radius:9px;padding:10px 13px;font-size:13px;color:#00C9A7;margin-bottom:1rem';
+    status.textContent='✅ Planning '+year+' envoyé à '+dest+' ('+kb+'KB)';
+    btn.textContent='✓ Envoyé !';
+    setTimeout(()=>{ closeShareModal(); btn.textContent='Envoyer le planning'; },2500);
+  }catch(e){
+    status.style.cssText='display:block;background:rgba(255,107,157,.12);border:0.5px solid rgba(255,107,157,.3);border-radius:9px;padding:10px 13px;font-size:13px;color:#FF6B9D;margin-bottom:1rem';
+    status.textContent='❌ Erreur : '+(e.text||e.message||String(e));
+    console.error('[share]',e);
+  }finally{
+    btn.disabled=false; icon.style.animation='';
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  CSV PARSE / GENERATE
-// ══════════════════════════════════════════════════════════════
-function parseCSV(text) {
-  const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/).filter(l => l.trim());
+// Close on Escape key
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.getElementById('share-overlay').style.display='none';
+});
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     CALEDIT — Éditeur de reservations.csv
+     ════════════════════════════════════════════════════════════ -->
+<div id="ce-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:300;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto">
+  <div style="background:#1a1928;border:0.5px solid rgba(255,255,255,.15);border-radius:20px;width:100%;max-width:960px;margin:0 auto;overflow:hidden">
+
+    <!-- Header modal -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;border-bottom:0.5px solid rgba(255,255,255,.1);background:rgba(0,201,167,.08)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#00C9A7,#00a88d);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#f0eeff">CalEdit — Réservations</div>
+          <div style="font-size:11px;color:rgba(0,201,167,.8);margin-top:1px">reservations.csv · villacorsu.github.io/admin</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="ce-add-btn" onclick="ceAddRow()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(108,99,255,.3);border:0.5px solid rgba(108,99,255,.5);border-radius:8px;color:#c4beff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button>
+        <button id="ce-push-btn" onclick="cePushToGitHub()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,#00C9A7,#00a88d);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Sauvegarder
+        </button>
+        <button onclick="ceSaveCsv()" title="Télécharger le CSV localement" style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.18);border-radius:8px;color:rgba(240,238,255,.5);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          ↓ CSV
+        </button>
+        <button onclick="closeCalEdit()" style="background:none;border:none;color:rgba(240,238,255,.4);cursor:pointer;font-size:22px;line-height:1;padding:2px 6px">✕</button>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div id="ce-status" style="display:none;padding:8px 1.5rem;font-size:12px;font-weight:600"></div>
+
+    <!-- Info banner -->
+    <!-- GitHub Token config -->
+    <div id="ce-token-bar" style="padding:.75rem 1.5rem;border-bottom:0.5px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:220px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(240,238,255,.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span style="font-size:11px;color:rgba(240,238,255,.4);white-space:nowrap">GitHub Token</span>
+        <input id="ce-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"
+          style="flex:1;background:rgba(255,255,255,.06);border:0.5px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;font-family:monospace;color:#f0eeff;outline:none;min-width:0"/>
+        <button onclick="ceSaveToken()" style="background:rgba(108,99,255,.3);border:0.5px solid rgba(108,99,255,.5);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#c4beff;cursor:pointer;font-family:inherit;white-space:nowrap">Enregistrer</button>
+      </div>
+      <div id="ce-token-status" style="font-size:11px;color:rgba(240,238,255,.35)">Jeton requis pour la sauvegarde directe sur GitHub</div>
+    </div>
+    <div style="padding:.6rem 1.5rem;background:rgba(0,201,167,.04);border-bottom:0.5px solid rgba(0,201,167,.12);font-size:12px;color:rgba(0,201,167,.7);display:flex;align-items:center;gap:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Modifiez les cellules puis cliquez <strong style="color:#00C9A7;margin:0 3px">Sauvegarder</strong>. Si l'app est sur GitHub Pages : mise à jour automatique. Sinon : le CSV est téléchargé et GitHub s'ouvre pour l'upload.
+    </div>
+
+    <!-- Table -->
+    <div style="overflow-x:auto;padding:1rem 1.5rem 1.5rem">
+      <table id="ce-table" style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1.5px solid rgba(255,255,255,.12)">
+            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4);white-space:nowrap">Arrivée</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4);white-space:nowrap">Départ</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Locataire</th>
+            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Nationalité</th>
+            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Pers.</th>
+            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Prix €</th>
+            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Nuits</th>
+            <th style="padding:8px 10px;width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="ce-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.ce-cell{
+  background:transparent;border:none;color:#f0eeff;font-family:inherit;
+  font-size:13px;width:100%;padding:5px 8px;border-radius:6px;outline:none;
+  transition:background .12s;
+}
+.ce-cell:focus{background:rgba(108,99,255,.2);border:0.5px solid rgba(108,99,255,.5)}
+.ce-cell.date{width:90px;font-family:monospace;letter-spacing:.03em}
+.ce-cell.num{width:60px;text-align:center}
+.ce-row{border-bottom:0.5px solid rgba(255,255,255,.06);transition:background .12s}
+.ce-row:hover{background:rgba(255,255,255,.03)}
+.ce-del{background:none;border:none;color:rgba(255,107,157,.3);cursor:pointer;padding:4px 7px;border-radius:6px;font-size:16px;line-height:1;transition:all .15s}
+.ce-del:hover{color:#FF6B9D;background:rgba(255,107,157,.12)}
+.ce-nights{font-size:12px;color:rgba(240,238,255,.35);text-align:center;padding:5px 8px;white-space:nowrap}
+</style>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CALEDIT — Éditeur avec sauvegarde directe sur GitHub
+// ═══════════════════════════════════════════════════════════════
+const CE_PROXY    = 'http://villa.corsu.free.fr/github-proxy.php';
+const CE_OWNER    = 'villaCorsu';
+const CE_REPO     = 'admin';
+const CE_FILE     = 'reservations.csv';
+const CE_BRANCH   = 'main';
+const CE_TOKEN_KEY = 'vc_gh_token';
+
+let ceData = [];
+let ceSha  = null;
+
+// ── Token ─────────────────────────────────────────────────────
+function ceGetToken(){ return localStorage.getItem(CE_TOKEN_KEY) || ''; }
+
+function ceSaveToken(){
+  const val = document.getElementById('ce-token-input').value.trim();
+  if(!val){ alert('Collez votre Personal Access Token GitHub'); return; }
+  localStorage.setItem(CE_TOKEN_KEY, val);
+  ceUpdateTokenStatus(val);
+  ceSetStatus('ok','Token enregistré');
+  setTimeout(() => document.getElementById('ce-status').style.display='none', 2000);
+}
+
+function ceUpdateTokenStatus(tok){
+  const el = document.getElementById('ce-token-status');
+  if(tok){
+    el.style.color = '#00C9A7';
+    el.textContent = "Sauvegarde directe activée";
+    document.getElementById('ce-token-input').value = tok.slice(0,8)+'…';
+  } else {
+    el.style.color = 'rgba(240,238,255,.35)';
+    el.textContent = "Token requis pour la sauvegarde directe sur GitHub";
+  }
+}
+
+// ── Open modal ────────────────────────────────────────────────
+async function openCalEdit(){
+  document.getElementById('ce-overlay').style.display = 'flex';
+  ceUpdateTokenStatus(ceGetToken());
+  ceSetStatus('info','Chargement depuis GitHub…');
+  try {
+    const tok = ceGetToken();
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    if(tok) headers['Authorization'] = 'Bearer ' + tok;
+    const res = await fetch('http://villa.corsu.free.fr/github-proxy.php', { headers });
+    if(!res.ok) throw new Error('GitHub API ' + res.status);
+    const json = await res.json();
+    ceSha = json.sha;
+    const raw  = atob(json.content.replace(/\n/g,''));
+    const text = new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c=>c.charCodeAt(0))));
+    ceData = parseCeCSV(text);
+    ceRenderTable();
+    ceSetStatus('ok','Chargé : ' + ceData.length + ' réservations');
+    setTimeout(() => document.getElementById('ce-status').style.display='none', 2500);
+  } catch(e) {
+    ceData = BOOKINGS.map(b=>({arr:b.arr,dep:b.dep,name:b.name,nat:b.nat||'',vis:b.vis||0,prix:b.prix||0}));
+    ceSha = null;
+    ceRenderTable();
+    ceSetStatus('err','⚠️ ' + e.message + ' — données locales affichées');
+  }
+}
+
+function closeCalEdit(){
+  document.getElementById('ce-overlay').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeCalEdit(); });
+
+// ── Parse CSV ─────────────────────────────────────────────────
+function parseCeCSV(text){
+  const lines = text.replace(/^\uFEFF/,'').trim().split(/\r?\n/).filter(l=>l.trim());
   if(lines.length < 2) return [];
   const sep = (lines[0].match(/;/g)||[]).length >= (lines[0].match(/,/g)||[]).length ? ';' : ',';
   const data = [];
-  for(let i = 1; i < lines.length; i++) {
-    const c = lines[i].split(sep).map(x => x.trim().replace(/^"|"$/g,''));
-    if(!c[0] && !c[2]) continue;
-    data.push({ arr:c[0]||'', dep:c[1]||'', name:c[2]||'', nat:c[3]||'', vis:+c[4]||0, prix:+c[5]||0 });
+  for(let i=1;i<lines.length;i++){
+    const c = lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));
+    if(!c[0]&&!c[2]) continue;
+    data.push({arr:c[0]||'',dep:c[1]||'',name:c[2]||'',nat:c[3]||'',vis:+c[4]||0,prix:+c[5]||0});
   }
   return data;
 }
 
-function generateCSV() {
+// ── Generate CSV ──────────────────────────────────────────────
+function ceGenerateCSV(){
   const lines = ['Arrivée;Départ;Locataire;Nationalité;Visiteurs;Prix'];
-  rows.forEach(r => { if(r.arr || r.name) lines.push([r.arr,r.dep,r.name,r.nat,r.vis,r.prix].join(';')); });
+  ceData.forEach(r => { if(r.arr||r.name) lines.push([r.arr,r.dep,r.name,r.nat,r.vis,r.prix].join(';')); });
   return lines.join('\r\n');
 }
 
-// ══════════════════════════════════════════════════════════════
-//  SORT
-// ══════════════════════════════════════════════════════════════
-function sortBy(key) {
-  if(sortKey === key) { sortAsc = !sortAsc; }
-  else { sortKey = key; sortAsc = true; }
-  renderTable();
-}
-
-function getSorted(data) {
-  return [...data].sort((a, b) => {
-    let va = a[sortKey], vb = b[sortKey];
-    if(sortKey === 'arr' || sortKey === 'dep') {
-      const da = parseDate(va)||new Date(0), db = parseDate(vb)||new Date(0);
-      return sortAsc ? da-db : db-da;
-    }
-    if(sortKey === 'vis' || sortKey === 'prix') return sortAsc ? va-vb : vb-va;
-    va = String(va).toLowerCase(); vb = String(vb).toLowerCase();
-    return sortAsc ? va.localeCompare(vb,'fr') : vb.localeCompare(va,'fr');
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-//  FILTER
-// ══════════════════════════════════════════════════════════════
-function getFiltered() {
-  const q   = document.getElementById('search').value.toLowerCase().trim();
-  const yr  = document.getElementById('year-filter').value;
-  return rows.filter(r => {
-    if(q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
-    if(yr) {
-      const a = parseDate(r.arr), d = parseDate(r.dep);
-      if(a && a.getFullYear() != yr && d && d.getFullYear() != yr) return false;
-    }
-    return true;
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-//  RENDER TABLE
-// ══════════════════════════════════════════════════════════════
-function renderTable() {
-  const filtered = getSorted(getFiltered());
-  document.getElementById('row-count').textContent = filtered.length + ' / ' + rows.length + ' réservation' + (rows.length > 1?'s':'');
-
-  // Update sort arrows
-  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-
-  if(!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="placeholder"><div class="placeholder-icon">🗓</div><p>Aucune réservation trouvée</p></div></td></tr>`;
+// ── Push to GitHub ────────────────────────────────────────────
+async function cePushToGitHub(){
+  const tok = ceGetToken();
+  if(!tok){
+    ceSetStatus('err','Configurez votre GitHub Token ci-dessus');
+    document.getElementById('ce-token-input').focus();
     return;
   }
+  const btn = document.getElementById('ce-push-btn');
+  btn.disabled = true; btn.textContent = 'Sauvegarde…';
+  ceSetStatus('info','Connexion à GitHub…');
 
-  filtered.forEach((row, fi) => {
-    // Find real index in rows[]
-    const ri = rows.indexOf(row);
-    const own = isOwner(row.name);
-    const n   = nights(row.arr, row.dep);
-    const tr  = document.createElement('tr');
-    if(own) tr.classList.add('owner-row');
+  const csv = ceGenerateCSV();
+  const bytes = new TextEncoder().encode('\uFEFF' + csv);
+  let binary = '';
+  bytes.forEach(b => { binary += String.fromCharCode(b); });
+  const b64 = btoa(binary);
+  const payload = { message: "Mise à jour reservations.csv — CalEdit", content: b64, branch: CE_BRANCH };
+  if(ceSha) payload.sha = ceSha;
+
+  // Try direct GitHub API (works if app is hosted on github.io)
+  try {
+    const res = await fetch(
+      "https://api.github.com/repos/"+CE_OWNER+"/"+CE_REPO+"/contents/"+CE_FILE,
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": "Bearer "+tok,
+          "Content-Type": "application/json",
+          "Accept": "application/vnd.github+json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    if(res.ok){
+      const result = await res.json();
+      ceSha = result.content.sha;
+      ceSetStatus("ok","✅ Sauvegardé sur GitHub — "+ceData.length+" réservations");
+      btn.textContent = "✓ Sauvegardé !";
+      setTimeout(async () => { btn.textContent="Sauvegarder"; btn.disabled=false; await syncFromSheet(); }, 2000);
+      return;
+    }
+    const errJson = await res.json().catch(()=>({}));
+    throw new Error(errJson.message || "GitHub API " + res.status);
+  } catch(e) {
+    // CORS blocked (app not on github.io) — fallback: download + open GitHub
+    console.warn("[CalEdit] Direct API failed:", e.message, "— using download fallback");
+    ceSetStatus("info","⬇️ Téléchargement du CSV + ouverture de GitHub…");
+    // 1. Download the file
+    ceSaveCsv();
+    // 2. Wait 800ms then open GitHub upload page
+    await new Promise(r=>setTimeout(r,800));
+    window.open("https://github.com/"+CE_OWNER+"/"+CE_REPO+"/upload/"+CE_BRANCH, "_blank");
+    ceSetStatus("warn","📂 Glissez le fichier reservations.csv téléchargé dans la page GitHub qui vient de s'ouvrir, puis cliquez Commit changes.");
+    btn.textContent = "Sauvegarder";
+    btn.disabled = false;
+    // Style warn
+    const el = document.getElementById("ce-status");
+    el.style.cssText = "display:block;padding:8px 1.5rem;font-size:12px;font-weight:600;background:rgba(255,179,71,.15);color:#FFB347";
+  }
+}
+
+// ── Download CSV locally ──────────────────────────────────────
+function ceSaveCsv(){
+  const csv  = '\uFEFF' + ceGenerateCSV();
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='reservations.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Status bar ────────────────────────────────────────────────
+function ceSetStatus(type, msg){
+  const el = document.getElementById('ce-status');
+  const cols = {ok:'background:rgba(0,201,167,.15);color:#00C9A7',err:'background:rgba(255,107,157,.15);color:#FF6B9D',info:'background:rgba(108,99,255,.15);color:#a39dff'};
+  el.style.cssText='display:block;padding:8px 1.5rem;font-size:12px;font-weight:600;'+(cols[type]||cols.info);
+  el.textContent = msg;
+}
+
+// ── Nights ────────────────────────────────────────────────────
+function ceNights(arr,dep){
+  try{const p=s=>{const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};const n=Math.round((p(dep)-p(arr))/86400000);return n>0?n+" n":"—";}catch(e){return "—";}
+}
+
+// ── Render table ──────────────────────────────────────────────
+function ceRenderTable(){
+  const tbody = document.getElementById('ce-tbody');
+  tbody.innerHTML = '';
+  ceData.forEach((row, i) => {
+    const isOwner = row.name.toLowerCase().includes("propriétaire");
+    const tr = document.createElement('tr');
+    tr.className = 'ce-row';
+    if(isOwner) tr.style.background = 'rgba(0,201,167,.05)';
     tr.innerHTML =
-      `<td class="cell-type"><div class="type-badge ${own?'type-own':'type-loc'}" title="${own?'Propriétaire':'Locataire'}">${own?'🏡':'👤'}</div></td>`+
-      `<td><input class="cell-input mono" value="${escH(row.arr)}" oninput="updateRow(${ri},'arr',this.value)" placeholder="JJ/MM/AAAA"/></td>`+
-      `<td><input class="cell-input mono" value="${escH(row.dep)}" oninput="updateRow(${ri},'dep',this.value)" placeholder="JJ/MM/AAAA"/></td>`+
-      `<td><input class="cell-input" value="${escH(row.name)}" oninput="updateRow(${ri},'name',this.value)"/></td>`+
-      `<td><input class="cell-input" value="${escH(row.nat)}" oninput="updateRow(${ri},'nat',this.value)"/></td>`+
-      `<td><input class="cell-input center" type="number" min="1" max="20" value="${row.vis}" oninput="updateRow(${ri},'vis',this.value)"/></td>`+
-      `<td><input class="cell-input right" type="number" min="0" value="${row.prix}" oninput="updateRow(${ri},'prix',this.value)"/></td>`+
-      `<td class="cell-nights" id="n-${ri}">${fmtNights(n)}</td>`+
-      `<td class="cell-del"><button class="del-btn" onclick="askDelete(${ri})" title="Supprimer">✕</button></td>`;
+      '<td style="padding:3px 4px"><input class="ce-cell date" value="'+escH(row.arr)+'" oninput="ceUpdate('+i+",'arr'"+',this.value)" placeholder="JJ/MM/AAAA"/></td>'+
+      '<td style="padding:3px 4px"><input class="ce-cell date" value="'+escH(row.dep)+'" oninput="ceUpdate('+i+",'dep'"+',this.value)" placeholder="JJ/MM/AAAA"/></td>'+
+      '<td style="padding:3px 4px;min-width:120px"><input class="ce-cell" value="'+escH(row.name)+'" oninput="ceUpdate('+i+",'name'"+',this.value)"/></td>'+
+      '<td style="padding:3px 4px;min-width:100px"><input class="ce-cell" value="'+escH(row.nat)+'" oninput="ceUpdate('+i+",'nat'"+',this.value)"/></td>'+
+      '<td style="padding:3px 4px"><input class="ce-cell num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUpdate('+i+",'vis'"+',this.value)"/></td>'+
+      '<td style="padding:3px 4px"><input class="ce-cell num" type="number" min="0" value="'+row.prix+'" oninput="ceUpdate('+i+",'prix'"+',this.value)"/></td>'+
+      '<td class="ce-nights" id="ce-nights-'+i+'">'+ceNights(row.arr,row.dep)+'</td>'+
+      '<td style="padding:3px 2px"><button class="ce-del" onclick="ceDeleteRow('+i+')" title="Supprimer">✕</button></td>';
     tbody.appendChild(tr);
   });
 }
 
-function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-function setTableLoading(on) {
-  if(on) {
-    document.getElementById('tbody').innerHTML =
-      `<tr><td colspan="9"><div class="placeholder"><div class="spinner"></div><p>Chargement…</p></div></td></tr>`;
+function ceUpdate(i,field,val){
+  ceData[i][field]=(field==='vis'||field==='prix')?(+val||0):val;
+  if(field==='arr'||field==='dep'){const el=document.getElementById('ce-nights-'+i);if(el)el.textContent=ceNights(ceData[i].arr,ceData[i].dep);}
+}
+
+function ceAddRow(){
+  ceData.push({arr:'',dep:'',name:'',nat:'',vis:2,prix:0});
+  ceRenderTable();
+  const rows=document.getElementById('ce-tbody').querySelectorAll('tr');
+  const last=rows[rows.length-1];
+  if(last) last.querySelector('input').focus();
+  document.getElementById('ce-overlay').scrollTo({top:99999,behavior:'smooth'});
+}
+
+function ceDeleteRow(i){
+  if(!confirm('Supprimer la réservation de "'+ceData[i].name+'" ?')) return;
+  ceData.splice(i,1);
+  ceRenderTable();
+}
+</script>
+
+</body>
+</html><!-- CALEDIT -->
+<div class="ce-ov" id="ce-ov">
+  <div class="ce-box">
+    <div class="ce-hd">
+      <div class="ce-hd-l">
+        <div class="ce-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#f0eeff">CalEdit — Réservations</div>
+          <div style="font-size:11px;color:rgba(0,201,167,.75);margin-top:1px">villacorsu.github.io/admin/reservations.csv</div>
+        </div>
+      </div>
+      <div class="ce-hd-r">
+        <button class="ce-btn ce-btn-add" onclick="ceOpenAdd()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
+        <button class="ce-btn ce-btn-save" id="ce-save-btn" onclick="cePush()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Sauvegarder</button>
+        <button class="ce-btn ce-btn-dl" onclick="ceDl()" title="Télécharger CSV"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+        <button class="ce-x" onclick="ceClose()">&#x2715;</button>
+      </div>
+    </div>
+    <div class="ce-tok">
+      <label>GitHub Token</label>
+      <input class="ce-tok-inp" id="ce-tok" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"/>
+      <button class="ce-tok-save" onclick="ceSaveTok()">Enregistrer</button>
+      <div class="ce-tok-st" id="ce-tok-st"></div>
+    </div>
+    <div class="ce-st" id="ce-st"></div>
+    <div class="ce-info">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Cliquez une date pour ouvrir le calendrier &nbsp;·&nbsp; <strong style="color:#FFB347;margin:0 2px">Ajouter</strong> pour une nouvelle réservation &nbsp;·&nbsp; <strong style="color:#00C9A7;margin:0 2px">Sauvegarder</strong> met à jour GitHub directement
+    </div>
+    <div class="ce-body">
+      <table class="ce-tbl">
+        <thead><tr>
+          <th></th><th>Arrivée</th><th>Départ</th><th>Locataire</th>
+          <th>Nationalité</th><th style="text-align:center">Pers.</th>
+          <th style="text-align:right">Prix €</th><th style="text-align:center">Nuits</th><th></th>
+        </tr></thead>
+        <tbody id="ce-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CalEdit Add/Edit modal with date picker -->
+<div class="ce-add-ov" id="ce-add-ov">
+  <div class="ce-add-box">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:700;color:#f0eeff" id="ce-add-title">Nouvelle r&#233;servation</div>
+      <button class="ce-x" onclick="ceCloseAdd()">&#x2715;</button>
+    </div>
+    <div class="ce-add-grid">
+      <div>
+        <div class="ce-cal-wrap">
+          <div class="ce-cal-step" id="ce-cal-step">1. S&#233;lectionnez la date d'arriv&#233;e</div>
+          <div class="ce-cal-nav">
+            <button class="ce-cal-nbtn" onclick="ceCalNav(-1)">&#8249;</button>
+            <span class="ce-cal-lbl" id="ce-cal-lbl"></span>
+            <button class="ce-cal-nbtn" onclick="ceCalNav(1)">&#8250;</button>
+          </div>
+          <div class="ce-cal-grid" id="ce-cal-grid"></div>
+          <div class="ce-cal-leg">
+            <span><i style="background:#FF8C00"></i>Arriv&#233;e</span>
+            <span><i style="background:#00C9A7"></i>D&#233;part</span>
+            <span><i style="background:rgba(255,140,0,.18);border:1px solid rgba(255,140,0,.3)"></i>S&#233;jour</span>
+          </div>
+        </div>
+        <div class="ce-ds">
+          <div class="ce-ds-b"><div class="ce-ds-l">Arriv&#233;e</div><div class="ce-ds-v arr" id="ce-d-arr">&#8212;</div></div>
+          <div class="ce-ds-arr">&#8594;</div>
+          <div class="ce-ds-b"><div class="ce-ds-l">D&#233;part</div><div class="ce-ds-v dep" id="ce-d-dep">&#8212;</div></div>
+        </div>
+      </div>
+      <div class="ce-ff">
+        <div class="ce-fl"><label>Locataire *</label><input type="text" class="ce-fi" id="ce-a-name" placeholder="Nom du locataire"/></div>
+        <div class="ce-fl"><label>Nationalit&#233;</label><input type="text" class="ce-fi" id="ce-a-nat" placeholder="Fran&#231;ais"/></div>
+        <div class="ce-fl-row">
+          <div class="ce-fl"><label>Personnes</label><input type="number" class="ce-fi" id="ce-a-vis" min="1" max="20" value="2"/></div>
+          <div class="ce-fl"><label>Prix &#8364;</label><input type="number" class="ce-fi" id="ce-a-prix" min="0" value="0"/></div>
+        </div>
+        <label class="ce-own-lbl"><input type="checkbox" id="ce-a-own" onchange="if(this.checked)document.getElementById('ce-a-name').value='Propriétaire';else if(document.getElementById('ce-a-name').value==='Propriétaire')document.getElementById('ce-a-name').value=''"/> S&#233;jour propri&#233;taire</label>
+      </div>
+    </div>
+    <div class="ce-add-btns">
+      <button class="ce-add-cancel" onclick="ceCloseAdd()">Annuler</button>
+      <button class="ce-add-ok" onclick="ceConfirmAdd()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══ CALEDIT ═══════════════════════════════════════════════════
+function showToast(type,msg){
+  const el=document.getElementById('toast');
+  if(!el)return;
+  el.className='toast '+type+' show';el.textContent=msg;
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>el.classList.remove('show'),4000);
+}
+const CE_OWNER='villaCorsu',CE_REPO='admin',CE_FILE='reservations.csv',CE_BRANCH='main';
+const CE_TOK_KEY='vc_gh_token';
+let ceD=[],ceSha=null,_cid=0;
+const ceId=()=>++_cid;
+const ceOwn=n=>String(n).toLowerCase().includes('propriétaire');
+const cePad=n=>n<10?'0'+n:String(n);
+const ceMOS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const ceWDS=['L','M','M','J','V','S','D'];
+
+function ceNt(a,d){
+  try{const p=s=>{const[dd,mm,yy]=s.split('/');return new Date(+yy,+mm-1,+dd);};const n=Math.round((p(d)-p(a))/86400000);return n>0?n+'n':'—';}
+  catch(e){return '—';}
+}
+function ceFmt(dt){return cePad(dt.getDate())+'/'+cePad(dt.getMonth()+1)+'/'+dt.getFullYear();}
+function cePD(s){if(!s)return null;const[d,m,y]=s.split('/');const dt=new Date(+y,+m-1,+d);dt.setHours(0,0,0,0);return dt;}
+function ceEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+// ── Token ───────────────────────────────────────────────────
+function ceGetTok(){return localStorage.getItem(CE_TOK_KEY)||'';}
+function ceSaveTok(){
+  const v=document.getElementById('ce-tok').value.trim();
+  if(!v){showToast('err','Collez votre GitHub Token');return;}
+  localStorage.setItem(CE_TOK_KEY,v);ceTokUI(v);showToast('ok','Token enregistré');
+}
+function ceTokUI(t){
+  const el=document.getElementById('ce-tok-st');
+  if(t){el.style.color='#00C9A7';el.textContent='✓ Activé';document.getElementById('ce-tok').value=t.slice(0,8)+'…';}
+  else{el.style.color='rgba(240,238,255,.3)';el.textContent='Non configuré';}
+}
+
+// ── Open / Close ────────────────────────────────────────────
+async function openCalEdit(){
+  document.getElementById('ce-ov').classList.add('on');
+  ceTokUI(ceGetTok());
+  ceSt('inf','Chargement depuis GitHub…');
+  try{
+    const tok=ceGetTok(),h={'Accept':'application/vnd.github+json'};
+    if(tok) h['Authorization']='Bearer '+tok;
+    const res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE+'?t='+Date.now(),{headers:h});
+    if(!res.ok) throw new Error('GitHub API '+res.status);
+    const j=await res.json();ceSha=j.sha;
+    const raw=atob(j.content.replace(/
+/g,''));
+    const txt=new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c=>c.charCodeAt(0))));
+    ceD=ceParseCsv(txt);ceRender();
+    ceSt('ok','✓ '+ceD.length+' réservations chargées');
+    setTimeout(()=>document.getElementById('ce-st').className='ce-st',3000);
+  }catch(e){
+    ceD=BOOKINGS.map(b=>({_id:ceId(),arr:b.arr,dep:b.dep,name:b.name,nat:b.nat||'',vis:b.vis||0,prix:b.prix||0}));
+    ceSha=null;ceRender();ceSt('err','⚠️ '+e.message+' — données locales');
   }
 }
+function ceClose(){document.getElementById('ce-ov').classList.remove('on');}
 
-// ══════════════════════════════════════════════════════════════
-//  EDIT / ADD / DELETE
-// ══════════════════════════════════════════════════════════════
-function updateRow(i, field, val) {
-  rows[i][field] = (field==='vis'||field==='prix') ? (+val||0) : val;
-  if(field==='arr'||field==='dep') {
-    const el = document.getElementById('n-'+i);
-    if(el) el.textContent = fmtNights(nights(rows[i].arr, rows[i].dep));
-  }
-  setDirty(true);
-  updateStats();
+// ── Status ──────────────────────────────────────────────────
+function ceSt(t,m){const el=document.getElementById('ce-st');el.className='ce-st '+t;el.textContent=m;}
+
+// ── CSV ─────────────────────────────────────────────────────
+function ceParseCsv(txt){
+  const lines=txt.replace(/^﻿/,'').trim().split(/
+?
+/).filter(l=>l.trim());
+  if(lines.length<2)return[];
+  const sep=(lines[0].match(/;/g)||[]).length>=(lines[0].match(/,/g)||[]).length?';':',';
+  return lines.slice(1).map(l=>{
+    const c=l.split(sep).map(x=>x.trim().replace(/^"|"$/g,''));
+    if(!c[0]&&!c[2])return null;
+    return{_id:ceId(),arr:c[0]||'',dep:c[1]||'',name:c[2]||'',nat:c[3]||'',vis:+c[4]||0,prix:+c[5]||0};
+  }).filter(Boolean);
+}
+function ceGenCsv(){
+  const ln=['Arrivée;Départ;Locataire;Nationalité;Visiteurs;Prix'];
+  ceD.forEach(r=>{if(r.arr||r.name)ln.push([r.arr,r.dep,r.name,r.nat,r.vis,r.prix].join(';'));});
+  return ln.join('
+');
 }
 
-function addRow() {
-  rows.push({ arr:'', dep:'', name:'', nat:'', vis:2, prix:0 });
-  setDirty(true);
-  renderTable();
-  // Focus last row first input
-  const inputs = document.querySelectorAll('#tbody tr:last-child input');
-  if(inputs[1]) inputs[1].focus();
-  window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-}
-
-function askDelete(i) {
-  delIdx = i;
-  const r = rows[i];
-  document.getElementById('del-modal-text').textContent =
-    `Supprimer la réservation de "${r.name || '(sans nom)'}" du ${r.arr} au ${r.dep} ? Cette action sera définitive après sauvegarde.`;
-  document.getElementById('del-modal').classList.add('show');
-}
-
-function closeDelModal() {
-  document.getElementById('del-modal').classList.remove('show');
-  delIdx = null;
-}
-
-function confirmDelete() {
-  if(delIdx === null) return;
-  rows.splice(delIdx, 1);
-  setDirty(true);
-  closeDelModal();
-  renderTable();
-  updateStats();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  STATS
-// ══════════════════════════════════════════════════════════════
-function updateStats() {
-  const loc   = rows.filter(r => !isOwner(r.name));
-  const own   = rows.filter(r => isOwner(r.name));
-  const totalN = loc.reduce((s,r) => s+nights(r.arr,r.dep), 0);
-  const ownN   = own.reduce((s,r) => s+nights(r.arr,r.dep), 0);
-  const rev    = loc.reduce((s,r) => s+r.prix, 0);
-  const avgVis = loc.length ? (loc.reduce((s,r)=>s+r.vis,0)/loc.length).toFixed(1) : '—';
-
-  document.getElementById('s-total').textContent   = loc.length;
-  document.getElementById('s-nights').textContent  = totalN;
-  document.getElementById('s-nights-sub').textContent = 'locataires';
-  document.getElementById('s-rev').textContent     = rev.toLocaleString('fr-FR') + ' €';
-  const yr = new Date().getFullYear();
-  const revYr = loc.filter(r=>parseDate(r.arr)?.getFullYear()===yr).reduce((s,r)=>s+r.prix,0);
-  document.getElementById('s-rev-sub').textContent = yr + ' : ' + revYr.toLocaleString('fr-FR') + ' €';
-  document.getElementById('s-guests').textContent  = avgVis;
-  document.getElementById('s-owner').textContent   = ownN;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  YEAR FILTER
-// ══════════════════════════════════════════════════════════════
-function populateYearFilter() {
-  const ys = new Set();
-  rows.forEach(r => {
-    const a = parseDate(r.arr), d = parseDate(r.dep);
-    if(a) ys.add(a.getFullYear());
-    if(d) ys.add(d.getFullYear());
+// ── Render table ────────────────────────────────────────────
+function ceRender(){
+  const tb=document.getElementById('ce-tbody');tb.innerHTML='';
+  const sorted=[...ceD].sort((a,b)=>{const p=s=>{if(!s)return new Date(0);const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};return p(a.arr)-p(b.arr);});
+  sorted.forEach(row=>{
+    const i=ceD.findIndex(r=>r._id===row._id);
+    const own=ceOwn(row.name);
+    const tr=document.createElement('tr');
+    if(own)tr.classList.add('ce-own-row');
+    tr.innerHTML=
+      '<td style="padding:3px 6px;text-align:center;font-size:14px">'+(own?'🏡':'👤')+'</td>'+
+      '<td><input class="ce-ci mono" value="'+ceEsc(row.arr)+'" oninput="ceUp('+i+','arr',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+','arr',this)" style="width:105px;cursor:pointer" title="Cliquer pour ouvrir le calendrier"/></td>'+
+      '<td><input class="ce-ci mono" value="'+ceEsc(row.dep)+'" oninput="ceUp('+i+','dep',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+','dep',this)" style="width:105px;cursor:pointer" title="Cliquer pour ouvrir le calendrier"/></td>'+
+      '<td><input class="ce-ci" value="'+ceEsc(row.name)+'" oninput="ceUp('+i+','name',this.value)" style="min-width:120px"/></td>'+
+      '<td><input class="ce-ci" value="'+ceEsc(row.nat)+'" oninput="ceUp('+i+','nat',this.value)" style="min-width:90px"/></td>'+
+      '<td><input class="ce-ci num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUp('+i+','vis',this.value)"/></td>'+
+      '<td><input class="ce-ci rt" type="number" min="0" value="'+row.prix+'" oninput="ceUp('+i+','prix',this.value)"/></td>'+
+      '<td class="ce-ni" id="ce-ni-'+i+'">'+ceNt(row.arr,row.dep)+'</td>'+
+      '<td><button class="ce-delbtn" onclick="ceDel('+i+')" title="Supprimer">&#x2715;</button></td>';
+    tb.appendChild(tr);
   });
-  const sel = document.getElementById('year-filter');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Toutes les années</option>';
-  [...ys].filter(y=>y>2020).sort((a,b)=>b-a).forEach(y => {
-    const o = document.createElement('option');
-    o.value=y; o.textContent=y; if(String(y)===cur) o.selected=true;
-    sel.appendChild(o);
-  });
 }
 
-// ══════════════════════════════════════════════════════════════
-//  STATUS & NOTICE
-// ══════════════════════════════════════════════════════════════
-function showStatus(type, msg) {
-  const el = document.getElementById('status-bar');
-  el.className = 'status-bar show ' + type;
-  el.innerHTML = (type==='ok'?'✓ ':type==='err'?'❌ ':'⏳ ') + msg;
+function ceUp(i,f,v){
+  ceD[i][f]=(f==='vis'||f==='prix')?(+v||0):v;
+  if(f==='arr'||f==='dep'){const el=document.getElementById('ce-ni-'+i);if(el)el.textContent=ceNt(ceD[i].arr,ceD[i].dep);}
+}
+function ceDel(i){
+  if(!confirm('Supprimer la réservation de "'+ceD[i].name+'" ?'))return;
+  ceD.splice(i,1);ceRender();ceSt('inf','Supprimé — cliquez Sauvegarder pour confirmer');
 }
 
-let _nt = null;
-function showNotice(type, msg) {
-  const el = document.getElementById('save-notice');
-  el.className = 'save-notice show ' + type;
-  el.textContent = msg;
-  clearTimeout(_nt);
-  _nt = setTimeout(() => el.classList.remove('show'), 3500);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  KEYBOARD SHORTCUTS
-// ══════════════════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-  if((e.ctrlKey||e.metaKey) && e.key==='s') {
-    e.preventDefault();
-    if(dirty) saveToGitHub();
+// ── Push to GitHub ──────────────────────────────────────────
+async function cePush(){
+  const tok=ceGetTok();
+  if(!tok){ceSt('err','Configurez votre GitHub Token');return;}
+  const btn=document.getElementById('ce-save-btn');
+  btn.disabled=true;btn.textContent='Sauvegarde…';ceSt('inf','Envoi vers GitHub…');
+  try{
+    const csv=ceGenCsv();
+    const bytes=new TextEncoder().encode('﻿'+csv);
+    let bin='';bytes.forEach(b=>{bin+=String.fromCharCode(b);});
+    const pl={message:'Mise à jour reservations.csv — CalEdit',content:btoa(bin),branch:CE_BRANCH};
+    if(ceSha)pl.sha=ceSha;
+    const res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE,{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body:JSON.stringify(pl),
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.message||'GitHub API '+res.status);}
+    const result=await res.json();ceSha=result.content.sha;
+    ceSt('ok','✅ '+ceD.length+' réservations sauvegardées sur GitHub');
+    btn.textContent='✓ Sauvegardé !';showToast('ok','✅ Sauvegardé sur GitHub');
+    setTimeout(async()=>{btn.textContent='Sauvegarder';btn.disabled=false;await syncFromSheet();},2000);
+  }catch(e){
+    ceSt('err','❌ '+e.message);showToast('err','❌ '+e.message);
+    btn.textContent='Sauvegarder';btn.disabled=false;
   }
-  if(e.key==='Escape') closeDelModal();
-});
+}
 
-// Close modal on backdrop click
-document.getElementById('del-modal').addEventListener('click', e => {
-  if(e.target === e.currentTarget) closeDelModal();
-});
+// ── Download CSV ────────────────────────────────────────────
+function ceDl(){
+  const blob=new Blob(['﻿'+ceGenCsv()],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='reservations.csv';a.click();URL.revokeObjectURL(url);
+}
 
-// ══════════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════════
-(function init(){
-  const tok = getToken();
-  updateTokenUI(tok);
-  loadCSV();
-})();
+// ═══ CALENDRIER ════════════════════════════════════════════════
+let calY=new Date().getFullYear(),calM=new Date().getMonth();
+let calSel={arr:null,dep:null},calStep='arr';
+let calEditIdx=null,calEditFld=null,calEditInp=null;
+
+// Open add modal (new row)
+function ceOpenAdd(){
+  calEditIdx=null;calEditFld=null;calEditInp=null;
+  calY=new Date().getFullYear();calM=new Date().getMonth();
+  calSel={arr:null,dep:null};calStep='arr';
+  ['ce-a-name','ce-a-nat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ce-a-vis').value=2;
+  document.getElementById('ce-a-prix').value=0;
+  document.getElementById('ce-a-own').checked=false;
+  document.getElementById('ce-d-arr').textContent='—';
+  document.getElementById('ce-d-dep').textContent='—';
+  document.getElementById('ce-add-title').textContent='Nouvelle réservation';
+  document.getElementById('ce-add-ov').classList.add('on');
+  ceRenderCal();
+}
+
+// Open edit modal (existing row, clicking on date cell)
+function ceOpenEdit(i,fld,inp){
+  calEditIdx=i;calEditFld=fld;calEditInp=inp;
+  const row=ceD[i];
+  const arrDt=cePD(row.arr),depDt=cePD(row.dep);
+  calSel={arr:arrDt,dep:depDt};
+  const ref=fld==='arr'?arrDt:depDt;
+  if(ref){calY=ref.getFullYear();calM=ref.getMonth();}
+  else{calY=new Date().getFullYear();calM=new Date().getMonth();}
+  calStep=fld;
+  document.getElementById('ce-a-name').value=row.name||'';
+  document.getElementById('ce-a-nat').value=row.nat||'';
+  document.getElementById('ce-a-vis').value=row.vis||2;
+  document.getElementById('ce-a-prix').value=row.prix||0;
+  document.getElementById('ce-a-own').checked=ceOwn(row.name);
+  document.getElementById('ce-d-arr').textContent=arrDt?ceFmt(arrDt):'—';
+  document.getElementById('ce-d-dep').textContent=depDt?ceFmt(depDt):'—';
+  document.getElementById('ce-add-title').textContent='Modifier la réservation';
+  document.getElementById('ce-add-ov').classList.add('on');
+  ceRenderCal();
+}
+
+function ceCloseAdd(){document.getElementById('ce-add-ov').classList.remove('on');calEditIdx=null;}
+
+function ceCalNav(dir){
+  calM+=dir;
+  if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;calY++;}
+  ceRenderCal();
+}
+
+function ceCalClick(y,m,d){
+  const dt=new Date(y,m,d);dt.setHours(0,0,0,0);
+  const today=new Date();today.setHours(0,0,0,0);
+  if(calStep==='arr'){
+    calSel={arr:dt,dep:null};calStep='dep';
+    document.getElementById('ce-d-dep').textContent='—';
+  }else if(calStep==='dep'){
+    if(calSel.arr&&dt<=calSel.arr){calSel={arr:dt,dep:null};calStep='dep';document.getElementById('ce-d-dep').textContent='—';}
+    else{calSel.dep=dt;calStep='done';}
+  }else{
+    calSel={arr:dt,dep:null};calStep='dep';
+    document.getElementById('ce-d-dep').textContent='—';
+  }
+  if(calSel.arr)document.getElementById('ce-d-arr').textContent=ceFmt(calSel.arr);
+  if(calSel.dep)document.getElementById('ce-d-dep').textContent=ceFmt(calSel.dep);
+  ceRenderCal();
+}
+
+function ceRenderCal(){
+  const stepEl=document.getElementById('ce-cal-step');
+  if(calStep==='arr')stepEl.textContent="1. Sélectionnez la date d'arrivée";
+  else if(calStep==='dep')stepEl.textContent='2. Sélectionnez la date de départ';
+  else stepEl.textContent='✓ Dates sélectionnées';
+
+  document.getElementById('ce-cal-lbl').textContent=ceMOS[calM]+' '+calY;
+
+  const first=new Date(calY,calM,1),last=new Date(calY,calM+1,0);
+  let dow=first.getDay();dow=dow===0?6:dow-1;
+  const today=new Date();today.setHours(0,0,0,0);
+  const arrT=calSel.arr?calSel.arr.getTime():null,depT=calSel.dep?calSel.dep.getTime():null;
+
+  let html='';
+  ceWDS.forEach(j=>{html+='<div class="ce-cal-dh">'+j+'</div>';});
+  for(let i=0;i<dow;i++)html+='<div></div>';
+  for(let d=1;d<=last.getDate();d++){
+    const dt=new Date(calY,calM,d);dt.setHours(0,0,0,0);const t=dt.getTime();
+    let cls='ce-cal-d';
+    if(arrT&&t===arrT)cls+=' ce-cal-arr';
+    else if(depT&&t===depT)cls+=' ce-cal-dep';
+    else if(arrT&&depT&&t>arrT&&t<depT)cls+=' ce-cal-rng';
+    else if(t<today.getTime())cls+=' ce-cal-past';
+    html+='<div class="'+cls+'" onclick="ceCalClick('+calY+','+calM+','+d+')">'+d+'</div>';
+  }
+  document.getElementById('ce-cal-grid').innerHTML=html;
+}
+
+function ceConfirmAdd(){
+  const name=document.getElementById('ce-a-name').value.trim();
+  const nat=document.getElementById('ce-a-nat').value.trim();
+  const vis=+document.getElementById('ce-a-vis').value||2;
+  const prix=+document.getElementById('ce-a-prix').value||0;
+
+  // Edit existing row
+  if(calEditIdx!==null){
+    const row=ceD[calEditIdx];
+    if(calSel.arr)row.arr=ceFmt(calSel.arr);
+    if(calSel.dep)row.dep=ceFmt(calSel.dep);
+    row.name=name||row.name;row.nat=nat;row.vis=vis;row.prix=prix;
+    if(calEditInp)calEditInp.value=calEditFld==='arr'?row.arr:row.dep;
+    ceRender();ceCloseAdd();
+    ceSt('inf','Modifié — cliquez Sauvegarder pour confirmer');
+    return;
+  }
+
+  // New row
+  if(!calSel.arr||!calSel.dep){showToast('err','Sélectionnez les deux dates');return;}
+  if(!name){showToast('err','Renseignez le nom du locataire');document.getElementById('ce-a-name').focus();return;}
+  ceD.push({_id:ceId(),arr:ceFmt(calSel.arr),dep:ceFmt(calSel.dep),name,nat,vis,prix});
+  ceD.sort((a,b)=>{const p=s=>{if(!s)return new Date(0);const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};return p(a.arr)-p(b.arr);});
+  ceRender();ceCloseAdd();
+  showToast('ok','Réservation ajoutée — cliquez Sauvegarder');
+  ceSt('inf','Ajoutée — cliquez Sauvegarder pour confirmer');
+}
+
+// Close on Escape
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ceClose();ceCloseAdd();}
+});
 </script>
 </body>
 </html>
