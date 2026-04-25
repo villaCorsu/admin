@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Villa Corsu — Réservations</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & Vars ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1614;--ink2:#4a3f3a;--ink3:#8a7f7a;
+  --cream:#faf7f2;--warm:#f3ede3;--warm2:#e8dfd2;
+  --gold:#b8860b;--gold2:#d4a017;--gold3:#f0c040;
+  --teal:#2a7a6a;--teal2:#3a9a86;
+  --rose:#c0392b;--rose2:#e74c3c;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 2px 20px rgba(26,22,20,.08);
+  --shadow-lg:0 8px 40px rgba(26,22,20,.14);
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);color:var(--ink);
+  min-height:100vh;
+}
+
+/* ── Background texture ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 10% 0%,rgba(184,134,11,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 100%,rgba(42,122,106,.06) 0%,transparent 60%);
+}
+
+/* ── Header ── */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(250,247,242,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--warm2);
+  padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:68px;gap:1rem;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-size:18px;font-weight:700;
+  color:#fff;letter-spacing:-.5px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(184,134,11,.3);
+}
+.logo-text{
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.3px;
+  line-height:1.1;
+}
+.logo-sub{font-size:11px;font-weight:400;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;
+  cursor:pointer;font-family:inherit;border:none;transition:all .15s;
+}
+.btn-gold{background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(184,134,11,.3)}
+.btn-gold:hover:not(:disabled){background:var(--gold2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(184,134,11,.35)}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(42,122,106,.25)}
+.btn-teal:hover:not(:disabled){background:var(--teal2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--warm2);color:var(--ink2)}
+.btn-ghost:hover:not(:disabled){background:var(--warm);border-color:var(--ink3)}
+.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:var(--rose)}
+.btn-danger:hover:not(:disabled){background:#fee2e2}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-icon{padding:7px;border-radius:var(--radius-sm);width:34px;height:34px;justify-content:center}
+
+/* ── Token bar ── */
+.token-bar{
+  background:var(--warm);border-bottom:1px solid var(--warm2);
+  padding:.6rem 2rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.token-bar label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.token-input{
+  flex:1;min-width:180px;max-width:300px;
+  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);
+  padding:6px 11px;font-size:12px;font-family:'DM Mono',monospace;color:var(--ink);outline:none;
+  transition:border-color .15s;
+}
+.token-input:focus{border-color:var(--gold)}
+.token-status{font-size:12px;font-weight:500;margin-left:auto}
+.token-status.ok{color:var(--teal)}
+.token-status.none{color:var(--ink3)}
+
+/* ── Main layout ── */
+.main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+/* ── Status bar ── */
+.status-bar{
+  border-radius:var(--radius);padding:10px 16px;font-size:13px;font-weight:500;
+  margin-bottom:1.5rem;display:none;align-items:center;gap:10px;
+}
+.status-bar.show{display:flex}
+.status-bar.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.status-bar.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.status-bar.info{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+
+/* ── Stats strip ── */
+.stats-strip{
+  display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;
+}
+.stat{
+  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius);
+  padding:.9rem 1.2rem;flex:1;min-width:120px;
+  box-shadow:var(--shadow);
+}
+.stat-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink);line-height:1}
+.stat-lbl{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.stat-sub{font-size:12px;color:var(--ink2);margin-top:2px}
+
+/* ── Toolbar ── */
+.toolbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;
+}
+.toolbar-left{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+.search-wrap{position:relative}
+.search-input{
+  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);
+  padding:7px 12px 7px 34px;font-size:13px;color:var(--ink);font-family:inherit;
+  outline:none;width:200px;transition:border-color .15s,width .2s;
+}
+.search-input:focus{border-color:var(--gold);width:240px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none}
+
+/* ── Table ── */
+.table-wrap{
+  background:#fff;border:1px solid var(--warm2);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--warm);border-bottom:1.5px solid var(--warm2)}
+th{
+  padding:10px 14px;text-align:left;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);white-space:nowrap;
+  cursor:pointer;user-select:none;
+}
+th:hover{color:var(--ink2)}
+th .sort-arrow{opacity:.35;margin-left:4px;font-size:9px}
+th.sorted .sort-arrow{opacity:1;color:var(--gold)}
+tbody tr{border-bottom:1px solid var(--warm2);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--cream)}
+tbody tr.owner-row{background:#f0fdf9}
+tbody tr.owner-row:hover{background:#e6faf5}
+td{padding:0}
+
+/* ── Editable cells ── */
+.cell-input{
+  background:transparent;border:none;color:var(--ink);font-family:inherit;font-size:13px;
+  width:100%;padding:9px 14px;outline:none;transition:background .12s;
+}
+.cell-input:focus{background:rgba(184,134,11,.08);border-radius:0}
+.cell-input.mono{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.02em}
+.cell-input.center{text-align:center}
+.cell-input.right{text-align:right}
+.cell-nights{padding:9px 14px;font-size:12px;color:var(--ink3);text-align:center;white-space:nowrap;font-family:'DM Mono',monospace}
+.cell-type{padding:9px 10px;text-align:center}
+.type-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;font-size:10px;
+}
+.type-loc{background:#fef3c7;color:#92400e}
+.type-own{background:#d1fae5;color:#065f46}
+.cell-del{padding:9px 10px;text-align:center}
+.del-btn{
+  background:none;border:none;cursor:pointer;color:#fca5a5;
+  padding:3px;border-radius:6px;line-height:1;transition:all .12s;opacity:.5;
+}
+.del-btn:hover{color:var(--rose);background:#fef2f2;opacity:1}
+
+/* ── Empty / Loading ── */
+.placeholder{text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.placeholder-icon{font-size:40px;margin-bottom:.75rem;opacity:.4}
+.placeholder p{font-size:14px}
+.spinner{
+  width:24px;height:24px;border:2.5px solid var(--warm2);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── New row ── */
+tbody tr.new-row{background:#fffbeb}
+tbody tr.new-row .cell-input{color:var(--ink)}
+
+/* ── Save notice ── */
+.save-notice{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;
+  background:var(--ink);color:#fff;border-radius:var(--radius);
+  padding:12px 18px;font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:var(--shadow-lg);
+  transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);
+}
+.save-notice.show{transform:translateY(0);opacity:1}
+.save-notice.ok{background:#166534}
+.save-notice.err{background:#991b1b}
+
+/* ── Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(26,22,20,.5);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:#fff;border-radius:16px;padding:2rem;max-width:420px;width:100%;
+  box-shadow:var(--shadow-lg);
+}
+.modal h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:.5rem}
+.modal p{font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:1.5rem}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .header{padding:0 1rem}
+  .main{padding:1.25rem .85rem 3rem}
+  .search-input{width:150px}
+  .search-input:focus{width:170px}
+  .stats-strip{flex-direction:column}
+  th,td{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">VC</div>
+    <div>
+      <div class="logo-text">La Villa Corsu</div>
+      <div class="logo-sub">Gestion des réservations</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="loadCSV()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Actualiser
+    </button>
+    <button class="btn btn-teal btn-sm" onclick="addRow()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter
+    </button>
+    <button class="btn btn-gold btn-sm" id="save-btn" onclick="saveToGitHub()" disabled>
+      <svg id="save-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Sauvegarder
+    </button>
+  </div>
+</div>
+
+<!-- ── Token bar ── -->
+<div class="token-bar">
+  <label>Token GitHub</label>
+  <input class="token-input" id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"/>
+  <button class="btn btn-ghost btn-sm" onclick="saveToken()">Enregistrer</button>
+  <div class="token-status none" id="token-status">Non configuré</div>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <!-- Stats -->
+  <div class="stats-strip" id="stats-strip">
+    <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Réservations</div></div>
+    <div class="stat"><div class="stat-val" id="s-nights">—</div><div class="stat-lbl">Nuitées</div><div class="stat-sub" id="s-nights-sub"></div></div>
+    <div class="stat"><div class="stat-val" id="s-rev">—</div><div class="stat-lbl">Revenus</div><div class="stat-sub" id="s-rev-sub"></div></div>
+    <div class="stat"><div class="stat-val" id="s-guests">—</div><div class="stat-lbl">Visiteurs moy.</div></div>
+    <div class="stat"><div class="stat-val" id="s-owner">—</div><div class="stat-lbl">Jours proprio</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="search" placeholder="Rechercher…" oninput="renderTable()"/>
+      </div>
+      <select id="year-filter" onchange="renderTable()" style="background:#fff;border:1px solid var(--warm2);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;font-family:inherit;color:var(--ink);outline:none">
+        <option value="">Toutes les années</option>
+      </select>
+    </div>
+    <div style="font-size:12px;color:var(--ink3)" id="row-count"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('type')" title="Type"><span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('arr')">Arrivée <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('dep')">Départ <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('name')">Locataire <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('nat')">Nationalité <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('vis')" style="text-align:center">Pers. <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('prix')" style="text-align:right">Prix € <span class="sort-arrow">↕</span></th>
+          <th style="text-align:center">Nuits</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ── Delete confirm modal ── -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal">
+    <h3>Supprimer la réservation</h3>
+    <p id="del-modal-text">Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action sera définitive après sauvegarde.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeDelModal()">Annuler</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Save notice toast ── -->
+<div class="save-notice" id="save-notice"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
+const GH_OWNER  = 'villaCorsu';
+const GH_REPO   = 'admin';
+const GH_FILE   = 'reservations.csv';
+const GH_BRANCH = 'main';
+const TOKEN_KEY = 'vc_admin_token';
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let rows     = [];   // all rows
+let fileSha  = null; // current GitHub file SHA
+let dirty    = false;
+let sortKey  = 'arr';
+let sortAsc  = true;
+let delIdx   = null; // row index pending deletion
+
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+const pad = n => n < 10 ? '0'+n : String(n);
+const isOwner = name => name.toLowerCase().includes('propriétaire');
+
+function parseDate(s) {
+  if(!s) return null;
+  s = String(s).trim();
+  let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+
+function nights(arr, dep) {
+  const a = parseDate(arr), d = parseDate(dep);
+  if(!a || !d) return 0;
+  return Math.max(0, Math.round((d - a) / 86400000));
+}
+
+function fmtNights(n) {
+  return n > 0 ? n + ' n' : '—';
+}
+
+function dateSort(a, b) {
+  const da = parseDate(a) || new Date(0);
+  const db = parseDate(b) || new Date(0);
+  return da - db;
+}
+
+function setDirty(val) {
+  dirty = val;
+  document.getElementById('save-btn').disabled = !val;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOKEN
+// ══════════════════════════════════════════════════════════════
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+
+function saveToken() {
+  const val = document.getElementById('token-input').value.trim();
+  if(!val) { showStatus('err', 'Collez votre GitHub Personal Access Token'); return; }
+  localStorage.setItem(TOKEN_KEY, val);
+  updateTokenUI(val);
+  showNotice('ok', '✓ Token enregistré');
+}
+
+function updateTokenUI(tok) {
+  const el = document.getElementById('token-status');
+  const inp = document.getElementById('token-input');
+  if(tok) {
+    el.className = 'token-status ok';
+    el.textContent = '✓ Configuré — sauvegarde activée';
+    inp.value = tok.slice(0, 8) + '…';
+  } else {
+    el.className = 'token-status none';
+    el.textContent = 'Non configuré — lecture seule';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GITHUB API
+// ══════════════════════════════════════════════════════════════
+const API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+async function loadCSV() {
+  showStatus('info', '⏳ Chargement depuis GitHub…');
+  setTableLoading(true);
+  try {
+    const tok = getToken();
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    if(tok) headers['Authorization'] = 'Bearer ' + tok;
+    const res = await fetch(API + '?ref=' + GH_BRANCH + '&t=' + Date.now(), { headers });
+    if(!res.ok) throw new Error('GitHub API ' + res.status + (res.status===404?' — fichier introuvable':''));
+    const json = await res.json();
+    fileSha = json.sha;
+    const raw  = atob(json.content.replace(/\n/g, ''));
+    const text = new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c => c.charCodeAt(0))));
+    rows = parseCSV(text);
+    setDirty(false);
+    renderTable();
+    updateStats();
+    populateYearFilter();
+    showStatus('ok', '✓ ' + rows.length + ' réservations chargées');
+    setTimeout(() => document.getElementById('status-bar').classList.remove('show'), 3000);
+  } catch(e) {
+    showStatus('err', '❌ ' + e.message);
+    setTableLoading(false);
+  }
+}
+
+async function saveToGitHub() {
+  const tok = getToken();
+  if(!tok) {
+    showStatus('err', '❌ Configurez votre GitHub Token pour sauvegarder');
+    document.getElementById('token-input').focus();
+    return;
+  }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg id="save-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .7s linear infinite"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sauvegarde…';
+  showStatus('info', '⏳ Envoi vers GitHub…');
+  try {
+    const csv   = generateCSV();
+    const bytes = new TextEncoder().encode('\uFEFF' + csv);
+    let binary  = '';
+    bytes.forEach(b => { binary += String.fromCharCode(b); });
+    const b64 = btoa(binary);
+    const payload = { message: 'Mise à jour reservations.csv — Villa Corsu Admin', content: b64, branch: GH_BRANCH };
+    if(fileSha) payload.sha = fileSha;
+    const res = await fetch(API, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer '+tok, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok) { const e = await res.json(); throw new Error(e.message || 'GitHub API ' + res.status); }
+    const result = await res.json();
+    fileSha = result.content.sha;
+    setDirty(false);
+    showStatus('ok', '✅ Sauvegardé sur GitHub — ' + rows.length + ' réservations');
+    showNotice('ok', '✅ Sauvegardé !');
+    setTimeout(() => document.getElementById('status-bar').classList.remove('show'), 4000);
+  } catch(e) {
+    showStatus('err', '❌ ' + e.message);
+    showNotice('err', '❌ Erreur de sauvegarde');
+  } finally {
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Sauvegarder';
+    btn.disabled = !dirty;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CSV PARSE / GENERATE
+// ══════════════════════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/).filter(l => l.trim());
+  if(lines.length < 2) return [];
+  const sep = (lines[0].match(/;/g)||[]).length >= (lines[0].match(/,/g)||[]).length ? ';' : ',';
+  const data = [];
+  for(let i = 1; i < lines.length; i++) {
+    const c = lines[i].split(sep).map(x => x.trim().replace(/^"|"$/g,''));
+    if(!c[0] && !c[2]) continue;
+    data.push({ arr:c[0]||'', dep:c[1]||'', name:c[2]||'', nat:c[3]||'', vis:+c[4]||0, prix:+c[5]||0 });
+  }
+  return data;
+}
+
+function generateCSV() {
+  const lines = ['Arrivée;Départ;Locataire;Nationalité;Visiteurs;Prix'];
+  rows.forEach(r => { if(r.arr || r.name) lines.push([r.arr,r.dep,r.name,r.nat,r.vis,r.prix].join(';')); });
+  return lines.join('\r\n');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SORT
+// ══════════════════════════════════════════════════════════════
+function sortBy(key) {
+  if(sortKey === key) { sortAsc = !sortAsc; }
+  else { sortKey = key; sortAsc = true; }
+  renderTable();
+}
+
+function getSorted(data) {
+  return [...data].sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if(sortKey === 'arr' || sortKey === 'dep') {
+      const da = parseDate(va)||new Date(0), db = parseDate(vb)||new Date(0);
+      return sortAsc ? da-db : db-da;
+    }
+    if(sortKey === 'vis' || sortKey === 'prix') return sortAsc ? va-vb : vb-va;
+    va = String(va).toLowerCase(); vb = String(vb).toLowerCase();
+    return sortAsc ? va.localeCompare(vb,'fr') : vb.localeCompare(va,'fr');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FILTER
+// ══════════════════════════════════════════════════════════════
+function getFiltered() {
+  const q   = document.getElementById('search').value.toLowerCase().trim();
+  const yr  = document.getElementById('year-filter').value;
+  return rows.filter(r => {
+    if(q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
+    if(yr) {
+      const a = parseDate(r.arr), d = parseDate(r.dep);
+      if(a && a.getFullYear() != yr && d && d.getFullYear() != yr) return false;
+    }
+    return true;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER TABLE
+// ══════════════════════════════════════════════════════════════
+function renderTable() {
+  const filtered = getSorted(getFiltered());
+  document.getElementById('row-count').textContent = filtered.length + ' / ' + rows.length + ' réservation' + (rows.length > 1?'s':'');
+
+  // Update sort arrows
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  if(!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="placeholder"><div class="placeholder-icon">🗓</div><p>Aucune réservation trouvée</p></div></td></tr>`;
+    return;
+  }
+
+  filtered.forEach((row, fi) => {
+    // Find real index in rows[]
+    const ri = rows.indexOf(row);
+    const own = isOwner(row.name);
+    const n   = nights(row.arr, row.dep);
+    const tr  = document.createElement('tr');
+    if(own) tr.classList.add('owner-row');
+    tr.innerHTML =
+      `<td class="cell-type"><div class="type-badge ${own?'type-own':'type-loc'}" title="${own?'Propriétaire':'Locataire'}">${own?'🏡':'👤'}</div></td>`+
+      `<td><input class="cell-input mono" value="${escH(row.arr)}" oninput="updateRow(${ri},'arr',this.value)" placeholder="JJ/MM/AAAA"/></td>`+
+      `<td><input class="cell-input mono" value="${escH(row.dep)}" oninput="updateRow(${ri},'dep',this.value)" placeholder="JJ/MM/AAAA"/></td>`+
+      `<td><input class="cell-input" value="${escH(row.name)}" oninput="updateRow(${ri},'name',this.value)"/></td>`+
+      `<td><input class="cell-input" value="${escH(row.nat)}" oninput="updateRow(${ri},'nat',this.value)"/></td>`+
+      `<td><input class="cell-input center" type="number" min="1" max="20" value="${row.vis}" oninput="updateRow(${ri},'vis',this.value)"/></td>`+
+      `<td><input class="cell-input right" type="number" min="0" value="${row.prix}" oninput="updateRow(${ri},'prix',this.value)"/></td>`+
+      `<td class="cell-nights" id="n-${ri}">${fmtNights(n)}</td>`+
+      `<td class="cell-del"><button class="del-btn" onclick="askDelete(${ri})" title="Supprimer">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function setTableLoading(on) {
+  if(on) {
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="9"><div class="placeholder"><div class="spinner"></div><p>Chargement…</p></div></td></tr>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EDIT / ADD / DELETE
+// ══════════════════════════════════════════════════════════════
+function updateRow(i, field, val) {
+  rows[i][field] = (field==='vis'||field==='prix') ? (+val||0) : val;
+  if(field==='arr'||field==='dep') {
+    const el = document.getElementById('n-'+i);
+    if(el) el.textContent = fmtNights(nights(rows[i].arr, rows[i].dep));
+  }
+  setDirty(true);
+  updateStats();
+}
+
+function addRow() {
+  rows.push({ arr:'', dep:'', name:'', nat:'', vis:2, prix:0 });
+  setDirty(true);
+  renderTable();
+  // Focus last row first input
+  const inputs = document.querySelectorAll('#tbody tr:last-child input');
+  if(inputs[1]) inputs[1].focus();
+  window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
+}
+
+function askDelete(i) {
+  delIdx = i;
+  const r = rows[i];
+  document.getElementById('del-modal-text').textContent =
+    `Supprimer la réservation de "${r.name || '(sans nom)'}" du ${r.arr} au ${r.dep} ? Cette action sera définitive après sauvegarde.`;
+  document.getElementById('del-modal').classList.add('show');
+}
+
+function closeDelModal() {
+  document.getElementById('del-modal').classList.remove('show');
+  delIdx = null;
+}
+
+function confirmDelete() {
+  if(delIdx === null) return;
+  rows.splice(delIdx, 1);
+  setDirty(true);
+  closeDelModal();
+  renderTable();
+  updateStats();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════════════
+function updateStats() {
+  const loc   = rows.filter(r => !isOwner(r.name));
+  const own   = rows.filter(r => isOwner(r.name));
+  const totalN = loc.reduce((s,r) => s+nights(r.arr,r.dep), 0);
+  const ownN   = own.reduce((s,r) => s+nights(r.arr,r.dep), 0);
+  const rev    = loc.reduce((s,r) => s+r.prix, 0);
+  const avgVis = loc.length ? (loc.reduce((s,r)=>s+r.vis,0)/loc.length).toFixed(1) : '—';
+
+  document.getElementById('s-total').textContent   = loc.length;
+  document.getElementById('s-nights').textContent  = totalN;
+  document.getElementById('s-nights-sub').textContent = 'locataires';
+  document.getElementById('s-rev').textContent     = rev.toLocaleString('fr-FR') + ' €';
+  const yr = new Date().getFullYear();
+  const revYr = loc.filter(r=>parseDate(r.arr)?.getFullYear()===yr).reduce((s,r)=>s+r.prix,0);
+  document.getElementById('s-rev-sub').textContent = yr + ' : ' + revYr.toLocaleString('fr-FR') + ' €';
+  document.getElementById('s-guests').textContent  = avgVis;
+  document.getElementById('s-owner').textContent   = ownN;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  YEAR FILTER
+// ══════════════════════════════════════════════════════════════
+function populateYearFilter() {
+  const ys = new Set();
+  rows.forEach(r => {
+    const a = parseDate(r.arr), d = parseDate(r.dep);
+    if(a) ys.add(a.getFullYear());
+    if(d) ys.add(d.getFullYear());
+  });
+  const sel = document.getElementById('year-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Toutes les années</option>';
+  [...ys].filter(y=>y>2020).sort((a,b)=>b-a).forEach(y => {
+    const o = document.createElement('option');
+    o.value=y; o.textContent=y; if(String(y)===cur) o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STATUS & NOTICE
+// ══════════════════════════════════════════════════════════════
+function showStatus(type, msg) {
+  const el = document.getElementById('status-bar');
+  el.className = 'status-bar show ' + type;
+  el.innerHTML = (type==='ok'?'✓ ':type==='err'?'❌ ':'⏳ ') + msg;
+}
+
+let _nt = null;
+function showNotice(type, msg) {
+  const el = document.getElementById('save-notice');
+  el.className = 'save-notice show ' + type;
+  el.textContent = msg;
+  clearTimeout(_nt);
+  _nt = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='s') {
+    e.preventDefault();
+    if(dirty) saveToGitHub();
+  }
+  if(e.key==='Escape') closeDelModal();
+});
+
+// Close modal on backdrop click
+document.getElementById('del-modal').addEventListener('click', e => {
+  if(e.target === e.currentTarget) closeDelModal();
+});
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+(function init(){
+  const tok = getToken();
+  updateTokenUI(tok);
+  loadCSV();
+})();
+</script>
+</body>
+</html>
