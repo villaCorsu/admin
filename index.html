@@ -347,336 +347,21 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape') document.getElementById('share-overlay').style.display='none';
 });
 </script>
-
-<!-- ════════════════════════════════════════════════════════════
-     CALEDIT — Éditeur de reservations.csv
-     ════════════════════════════════════════════════════════════ -->
-<div id="ce-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:300;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto">
-  <div style="background:#1a1928;border:0.5px solid rgba(255,255,255,.15);border-radius:20px;width:100%;max-width:960px;margin:0 auto;overflow:hidden">
-
-    <!-- Header modal -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;border-bottom:0.5px solid rgba(255,255,255,.1);background:rgba(0,201,167,.08)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#00C9A7,#00a88d);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
-        <div>
-          <div style="font-size:15px;font-weight:700;color:#f0eeff">CalEdit — Réservations</div>
-          <div style="font-size:11px;color:rgba(0,201,167,.8);margin-top:1px">reservations.csv · villacorsu.github.io/admin</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button id="ce-add-btn" onclick="ceAddRow()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(108,99,255,.3);border:0.5px solid rgba(108,99,255,.5);border-radius:8px;color:#c4beff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Ajouter
-        </button>
-        <button id="ce-push-btn" onclick="cePushToGitHub()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,#00C9A7,#00a88d);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Sauvegarder
-        </button>
-        <button onclick="ceSaveCsv()" title="Télécharger le CSV localement" style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.18);border-radius:8px;color:rgba(240,238,255,.5);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          ↓ CSV
-        </button>
-        <button onclick="closeCalEdit()" style="background:none;border:none;color:rgba(240,238,255,.4);cursor:pointer;font-size:22px;line-height:1;padding:2px 6px">✕</button>
-      </div>
-    </div>
-
-    <!-- Status bar -->
-    <div id="ce-status" style="display:none;padding:8px 1.5rem;font-size:12px;font-weight:600"></div>
-
-    <!-- Info banner -->
-    <!-- GitHub Token config -->
-    <div id="ce-token-bar" style="padding:.75rem 1.5rem;border-bottom:0.5px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:220px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(240,238,255,.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span style="font-size:11px;color:rgba(240,238,255,.4);white-space:nowrap">GitHub Token</span>
-        <input id="ce-token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"
-          style="flex:1;background:rgba(255,255,255,.06);border:0.5px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;font-family:monospace;color:#f0eeff;outline:none;min-width:0"/>
-        <button onclick="ceSaveToken()" style="background:rgba(108,99,255,.3);border:0.5px solid rgba(108,99,255,.5);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#c4beff;cursor:pointer;font-family:inherit;white-space:nowrap">Enregistrer</button>
-      </div>
-      <div id="ce-token-status" style="font-size:11px;color:rgba(240,238,255,.35)">Jeton requis pour la sauvegarde directe sur GitHub</div>
-    </div>
-    <div style="padding:.6rem 1.5rem;background:rgba(0,201,167,.04);border-bottom:0.5px solid rgba(0,201,167,.12);font-size:12px;color:rgba(0,201,167,.7);display:flex;align-items:center;gap:8px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Modifiez les cellules puis cliquez <strong style="color:#00C9A7;margin:0 3px">Sauvegarder</strong>. Si l'app est sur GitHub Pages : mise à jour automatique. Sinon : le CSV est téléchargé et GitHub s'ouvre pour l'upload.
-    </div>
-
-    <!-- Table -->
-    <div style="overflow-x:auto;padding:1rem 1.5rem 1.5rem">
-      <table id="ce-table" style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
-          <tr style="border-bottom:1.5px solid rgba(255,255,255,.12)">
-            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4);white-space:nowrap">Arrivée</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4);white-space:nowrap">Départ</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Locataire</th>
-            <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Nationalité</th>
-            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Pers.</th>
-            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Prix €</th>
-            <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,238,255,.4)">Nuits</th>
-            <th style="padding:8px 10px;width:36px"></th>
-          </tr>
-        </thead>
-        <tbody id="ce-tbody"></tbody>
-      </table>
-    </div>
-
-  </div>
-</div>
-
-<style>
-.ce-cell{
-  background:transparent;border:none;color:#f0eeff;font-family:inherit;
-  font-size:13px;width:100%;padding:5px 8px;border-radius:6px;outline:none;
-  transition:background .12s;
-}
-.ce-cell:focus{background:rgba(108,99,255,.2);border:0.5px solid rgba(108,99,255,.5)}
-.ce-cell.date{width:90px;font-family:monospace;letter-spacing:.03em}
-.ce-cell.num{width:60px;text-align:center}
-.ce-row{border-bottom:0.5px solid rgba(255,255,255,.06);transition:background .12s}
-.ce-row:hover{background:rgba(255,255,255,.03)}
-.ce-del{background:none;border:none;color:rgba(255,107,157,.3);cursor:pointer;padding:4px 7px;border-radius:6px;font-size:16px;line-height:1;transition:all .15s}
-.ce-del:hover{color:#FF6B9D;background:rgba(255,107,157,.12)}
-.ce-nights{font-size:12px;color:rgba(240,238,255,.35);text-align:center;padding:5px 8px;white-space:nowrap}
-</style>
-
-<script>
-// ═══════════════════════════════════════════════════════════════
-//  CALEDIT — Éditeur avec sauvegarde directe sur GitHub
-// ═══════════════════════════════════════════════════════════════
-const CE_PROXY    = 'http://villa.corsu.free.fr/github-proxy.php';
-const CE_OWNER    = 'villaCorsu';
-const CE_REPO     = 'admin';
-const CE_FILE     = 'reservations.csv';
-const CE_BRANCH   = 'main';
-const CE_TOKEN_KEY = 'vc_gh_token';
-
-let ceData = [];
-let ceSha  = null;
-
-// ── Token ─────────────────────────────────────────────────────
-function ceGetToken(){ return localStorage.getItem(CE_TOKEN_KEY) || ''; }
-
-function ceSaveToken(){
-  const val = document.getElementById('ce-token-input').value.trim();
-  if(!val){ alert('Collez votre Personal Access Token GitHub'); return; }
-  localStorage.setItem(CE_TOKEN_KEY, val);
-  ceUpdateTokenStatus(val);
-  ceSetStatus('ok','Token enregistré');
-  setTimeout(() => document.getElementById('ce-status').style.display='none', 2000);
-}
-
-function ceUpdateTokenStatus(tok){
-  const el = document.getElementById('ce-token-status');
-  if(tok){
-    el.style.color = '#00C9A7';
-    el.textContent = "Sauvegarde directe activée";
-    document.getElementById('ce-token-input').value = tok.slice(0,8)+'…';
-  } else {
-    el.style.color = 'rgba(240,238,255,.35)';
-    el.textContent = "Token requis pour la sauvegarde directe sur GitHub";
-  }
-}
-
-// ── Open modal ────────────────────────────────────────────────
-async function openCalEdit(){
-  document.getElementById('ce-overlay').style.display = 'flex';
-  ceUpdateTokenStatus(ceGetToken());
-  ceSetStatus('info','Chargement depuis GitHub…');
-  try {
-    const tok = ceGetToken();
-    const headers = { 'Accept': 'application/vnd.github+json' };
-    if(tok) headers['Authorization'] = 'Bearer ' + tok;
-    const res = await fetch('http://villa.corsu.free.fr/github-proxy.php', { headers });
-    if(!res.ok) throw new Error('GitHub API ' + res.status);
-    const json = await res.json();
-    ceSha = json.sha;
-    const raw  = atob(json.content.replace(/\n/g,''));
-    const text = new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c=>c.charCodeAt(0))));
-    ceData = parseCeCSV(text);
-    ceRenderTable();
-    ceSetStatus('ok','Chargé : ' + ceData.length + ' réservations');
-    setTimeout(() => document.getElementById('ce-status').style.display='none', 2500);
-  } catch(e) {
-    ceData = BOOKINGS.map(b=>({arr:b.arr,dep:b.dep,name:b.name,nat:b.nat||'',vis:b.vis||0,prix:b.prix||0}));
-    ceSha = null;
-    ceRenderTable();
-    ceSetStatus('err','⚠️ ' + e.message + ' — données locales affichées');
-  }
-}
-
-function closeCalEdit(){
-  document.getElementById('ce-overlay').style.display = 'none';
-}
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeCalEdit(); });
-
-// ── Parse CSV ─────────────────────────────────────────────────
-function parseCeCSV(text){
-  const lines = text.replace(/^\uFEFF/,'').trim().split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length < 2) return [];
-  const sep = (lines[0].match(/;/g)||[]).length >= (lines[0].match(/,/g)||[]).length ? ';' : ',';
-  const data = [];
-  for(let i=1;i<lines.length;i++){
-    const c = lines[i].split(sep).map(x=>x.trim().replace(/^"|"$/g,''));
-    if(!c[0]&&!c[2]) continue;
-    data.push({arr:c[0]||'',dep:c[1]||'',name:c[2]||'',nat:c[3]||'',vis:+c[4]||0,prix:+c[5]||0});
-  }
-  return data;
-}
-
-// ── Generate CSV ──────────────────────────────────────────────
-function ceGenerateCSV(){
-  const lines = ['Arrivée;Départ;Locataire;Nationalité;Visiteurs;Prix'];
-  ceData.forEach(r => { if(r.arr||r.name) lines.push([r.arr,r.dep,r.name,r.nat,r.vis,r.prix].join(';')); });
-  return lines.join('\r\n');
-}
-
-// ── Push to GitHub ────────────────────────────────────────────
-async function cePushToGitHub(){
-  const tok = ceGetToken();
-  if(!tok){
-    ceSetStatus('err','Configurez votre GitHub Token ci-dessus');
-    document.getElementById('ce-token-input').focus();
-    return;
-  }
-  const btn = document.getElementById('ce-push-btn');
-  btn.disabled = true; btn.textContent = 'Sauvegarde…';
-  ceSetStatus('info','Connexion à GitHub…');
-
-  const csv = ceGenerateCSV();
-  const bytes = new TextEncoder().encode('\uFEFF' + csv);
-  let binary = '';
-  bytes.forEach(b => { binary += String.fromCharCode(b); });
-  const b64 = btoa(binary);
-  const payload = { message: "Mise à jour reservations.csv — CalEdit", content: b64, branch: CE_BRANCH };
-  if(ceSha) payload.sha = ceSha;
-
-  // Try direct GitHub API (works if app is hosted on github.io)
-  try {
-    const res = await fetch(
-      "https://api.github.com/repos/"+CE_OWNER+"/"+CE_REPO+"/contents/"+CE_FILE,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": "Bearer "+tok,
-          "Content-Type": "application/json",
-          "Accept": "application/vnd.github+json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-    if(res.ok){
-      const result = await res.json();
-      ceSha = result.content.sha;
-      ceSetStatus("ok","✅ Sauvegardé sur GitHub — "+ceData.length+" réservations");
-      btn.textContent = "✓ Sauvegardé !";
-      setTimeout(async () => { btn.textContent="Sauvegarder"; btn.disabled=false; await syncFromSheet(); }, 2000);
-      return;
-    }
-    const errJson = await res.json().catch(()=>({}));
-    throw new Error(errJson.message || "GitHub API " + res.status);
-  } catch(e) {
-    // CORS blocked (app not on github.io) — fallback: download + open GitHub
-    console.warn("[CalEdit] Direct API failed:", e.message, "— using download fallback");
-    ceSetStatus("info","⬇️ Téléchargement du CSV + ouverture de GitHub…");
-    // 1. Download the file
-    ceSaveCsv();
-    // 2. Wait 800ms then open GitHub upload page
-    await new Promise(r=>setTimeout(r,800));
-    window.open("https://github.com/"+CE_OWNER+"/"+CE_REPO+"/upload/"+CE_BRANCH, "_blank");
-    ceSetStatus("warn","📂 Glissez le fichier reservations.csv téléchargé dans la page GitHub qui vient de s'ouvrir, puis cliquez Commit changes.");
-    btn.textContent = "Sauvegarder";
-    btn.disabled = false;
-    // Style warn
-    const el = document.getElementById("ce-status");
-    el.style.cssText = "display:block;padding:8px 1.5rem;font-size:12px;font-weight:600;background:rgba(255,179,71,.15);color:#FFB347";
-  }
-}
-
-// ── Download CSV locally ──────────────────────────────────────
-function ceSaveCsv(){
-  const csv  = '\uFEFF' + ceGenerateCSV();
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href=url; a.download='reservations.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ── Status bar ────────────────────────────────────────────────
-function ceSetStatus(type, msg){
-  const el = document.getElementById('ce-status');
-  const cols = {ok:'background:rgba(0,201,167,.15);color:#00C9A7',err:'background:rgba(255,107,157,.15);color:#FF6B9D',info:'background:rgba(108,99,255,.15);color:#a39dff'};
-  el.style.cssText='display:block;padding:8px 1.5rem;font-size:12px;font-weight:600;'+(cols[type]||cols.info);
-  el.textContent = msg;
-}
-
-// ── Nights ────────────────────────────────────────────────────
-function ceNights(arr,dep){
-  try{const p=s=>{const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};const n=Math.round((p(dep)-p(arr))/86400000);return n>0?n+" n":"—";}catch(e){return "—";}
-}
-
-// ── Render table ──────────────────────────────────────────────
-function ceRenderTable(){
-  const tbody = document.getElementById('ce-tbody');
-  tbody.innerHTML = '';
-  ceData.forEach((row, i) => {
-    const isOwner = row.name.toLowerCase().includes("propriétaire");
-    const tr = document.createElement('tr');
-    tr.className = 'ce-row';
-    if(isOwner) tr.style.background = 'rgba(0,201,167,.05)';
-    tr.innerHTML =
-      '<td style="padding:3px 4px"><input class="ce-cell date" value="'+escH(row.arr)+'" oninput="ceUpdate('+i+",'arr'"+',this.value)" placeholder="JJ/MM/AAAA"/></td>'+
-      '<td style="padding:3px 4px"><input class="ce-cell date" value="'+escH(row.dep)+'" oninput="ceUpdate('+i+",'dep'"+',this.value)" placeholder="JJ/MM/AAAA"/></td>'+
-      '<td style="padding:3px 4px;min-width:120px"><input class="ce-cell" value="'+escH(row.name)+'" oninput="ceUpdate('+i+",'name'"+',this.value)"/></td>'+
-      '<td style="padding:3px 4px;min-width:100px"><input class="ce-cell" value="'+escH(row.nat)+'" oninput="ceUpdate('+i+",'nat'"+',this.value)"/></td>'+
-      '<td style="padding:3px 4px"><input class="ce-cell num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUpdate('+i+",'vis'"+',this.value)"/></td>'+
-      '<td style="padding:3px 4px"><input class="ce-cell num" type="number" min="0" value="'+row.prix+'" oninput="ceUpdate('+i+",'prix'"+',this.value)"/></td>'+
-      '<td class="ce-nights" id="ce-nights-'+i+'">'+ceNights(row.arr,row.dep)+'</td>'+
-      '<td style="padding:3px 2px"><button class="ce-del" onclick="ceDeleteRow('+i+')" title="Supprimer">✕</button></td>';
-    tbody.appendChild(tr);
-  });
-}
-
-function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-function ceUpdate(i,field,val){
-  ceData[i][field]=(field==='vis'||field==='prix')?(+val||0):val;
-  if(field==='arr'||field==='dep'){const el=document.getElementById('ce-nights-'+i);if(el)el.textContent=ceNights(ceData[i].arr,ceData[i].dep);}
-}
-
-function ceAddRow(){
-  ceData.push({arr:'',dep:'',name:'',nat:'',vis:2,prix:0});
-  ceRenderTable();
-  const rows=document.getElementById('ce-tbody').querySelectorAll('tr');
-  const last=rows[rows.length-1];
-  if(last) last.querySelector('input').focus();
-  document.getElementById('ce-overlay').scrollTo({top:99999,behavior:'smooth'});
-}
-
-function ceDeleteRow(i){
-  if(!confirm('Supprimer la réservation de "'+ceData[i].name+'" ?')) return;
-  ceData.splice(i,1);
-  ceRenderTable();
-}
-</script>
-
-</body>
-</html><!-- CALEDIT -->
+<!-- CALEDIT ─ Éditeur reservations.csv -->
 <div class="ce-ov" id="ce-ov">
   <div class="ce-box">
     <div class="ce-hd">
       <div class="ce-hd-l">
         <div class="ce-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
         <div>
-          <div style="font-size:15px;font-weight:700;color:#f0eeff">CalEdit — Réservations</div>
+          <div style="font-size:15px;font-weight:700;color:#f0eeff">CalEdit &#8212; R&#233;servations</div>
           <div style="font-size:11px;color:rgba(0,201,167,.75);margin-top:1px">villacorsu.github.io/admin/reservations.csv</div>
         </div>
       </div>
       <div class="ce-hd-r">
         <button class="ce-btn ce-btn-add" onclick="ceOpenAdd()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
         <button class="ce-btn ce-btn-save" id="ce-save-btn" onclick="cePush()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Sauvegarder</button>
-        <button class="ce-btn ce-btn-dl" onclick="ceDl()" title="Télécharger CSV"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+        <button class="ce-btn ce-btn-dl" onclick="ceDl()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
         <button class="ce-x" onclick="ceClose()">&#x2715;</button>
       </div>
     </div>
@@ -689,14 +374,14 @@ function ceDeleteRow(i){
     <div class="ce-st" id="ce-st"></div>
     <div class="ce-info">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Cliquez une date pour ouvrir le calendrier &nbsp;·&nbsp; <strong style="color:#FFB347;margin:0 2px">Ajouter</strong> pour une nouvelle réservation &nbsp;·&nbsp; <strong style="color:#00C9A7;margin:0 2px">Sauvegarder</strong> met à jour GitHub directement
+      Cliquez une date pour le calendrier &nbsp;&bull;&nbsp; <strong style="color:#FFB347">Ajouter</strong> pour une nouvelle r&#233;servation &nbsp;&bull;&nbsp; <strong style="color:#00C9A7">Sauvegarder</strong> met &#224; jour GitHub directement
     </div>
     <div class="ce-body">
       <table class="ce-tbl">
         <thead><tr>
-          <th></th><th>Arrivée</th><th>Départ</th><th>Locataire</th>
-          <th>Nationalité</th><th style="text-align:center">Pers.</th>
-          <th style="text-align:right">Prix €</th><th style="text-align:center">Nuits</th><th></th>
+          <th></th><th>Arriv&#233;e</th><th>D&#233;part</th><th>Locataire</th>
+          <th>Nationalit&#233;</th><th style="text-align:center">Pers.</th>
+          <th style="text-align:right">Prix &#8364;</th><th style="text-align:center">Nuits</th><th></th>
         </tr></thead>
         <tbody id="ce-tbody"></tbody>
       </table>
@@ -704,7 +389,7 @@ function ceDeleteRow(i){
   </div>
 </div>
 
-<!-- CalEdit Add/Edit modal with date picker -->
+<!-- CalEdit ─ Modale ajout/&#233;dition avec calendrier -->
 <div class="ce-add-ov" id="ce-add-ov">
   <div class="ce-add-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -714,7 +399,7 @@ function ceDeleteRow(i){
     <div class="ce-add-grid">
       <div>
         <div class="ce-cal-wrap">
-          <div class="ce-cal-step" id="ce-cal-step">1. S&#233;lectionnez la date d'arriv&#233;e</div>
+          <div class="ce-cal-step" id="ce-cal-step">1. S&#233;lectionnez la date d&#39;arriv&#233;e</div>
           <div class="ce-cal-nav">
             <button class="ce-cal-nbtn" onclick="ceCalNav(-1)">&#8249;</button>
             <span class="ce-cal-lbl" id="ce-cal-lbl"></span>
@@ -740,7 +425,10 @@ function ceDeleteRow(i){
           <div class="ce-fl"><label>Personnes</label><input type="number" class="ce-fi" id="ce-a-vis" min="1" max="20" value="2"/></div>
           <div class="ce-fl"><label>Prix &#8364;</label><input type="number" class="ce-fi" id="ce-a-prix" min="0" value="0"/></div>
         </div>
-        <label class="ce-own-lbl"><input type="checkbox" id="ce-a-own" onchange="if(this.checked)document.getElementById('ce-a-name').value='Propriétaire';else if(document.getElementById('ce-a-name').value==='Propriétaire')document.getElementById('ce-a-name').value=''"/> S&#233;jour propri&#233;taire</label>
+        <label class="ce-own-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:rgba(240,238,255,.55);margin-top:.2rem">
+          <input type="checkbox" id="ce-a-own"/>
+          S&#233;jour propri&#233;taire
+        </label>
       </div>
     </div>
     <div class="ce-add-btns">
@@ -751,15 +439,7 @@ function ceDeleteRow(i){
 </div>
 
 <script>
-'use strict';
-// ═══ CALEDIT ═══════════════════════════════════════════════════
-function showToast(type,msg){
-  const el=document.getElementById('toast');
-  if(!el)return;
-  el.className='toast '+type+' show';el.textContent=msg;
-  clearTimeout(showToast._t);
-  showToast._t=setTimeout(()=>el.classList.remove('show'),4000);
-}
+// ═══ CALEDIT (unique) ══════════════════════════════════════════
 const CE_OWNER='villaCorsu',CE_REPO='admin',CE_FILE='reservations.csv',CE_BRANCH='main';
 const CE_TOK_KEY='vc_gh_token';
 let ceD=[],ceSha=null,_cid=0;
@@ -769,64 +449,67 @@ const cePad=n=>n<10?'0'+n:String(n);
 const ceMOS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const ceWDS=['L','M','M','J','V','S','D'];
 
-function ceNt(a,d){
-  try{const p=s=>{const[dd,mm,yy]=s.split('/');return new Date(+yy,+mm-1,+dd);};const n=Math.round((p(d)-p(a))/86400000);return n>0?n+'n':'—';}
-  catch(e){return '—';}
+// Toast (utilise la div existante #toast du share modal)
+function ceTst(type,msg){
+  const el=document.getElementById('toast');if(!el)return;
+  el.className='toast '+type+' show';el.textContent=msg;
+  clearTimeout(ceTst._t);ceTst._t=setTimeout(()=>el.classList.remove('show'),4200);
 }
-function ceFmt(dt){return cePad(dt.getDate())+'/'+cePad(dt.getMonth()+1)+'/'+dt.getFullYear();}
-function cePD(s){if(!s)return null;const[d,m,y]=s.split('/');const dt=new Date(+y,+m-1,+d);dt.setHours(0,0,0,0);return dt;}
-function ceEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
-// ── Token ───────────────────────────────────────────────────
+// ── Token ────────────────────────────────────────────────────
 function ceGetTok(){return localStorage.getItem(CE_TOK_KEY)||'';}
 function ceSaveTok(){
   const v=document.getElementById('ce-tok').value.trim();
-  if(!v){showToast('err','Collez votre GitHub Token');return;}
-  localStorage.setItem(CE_TOK_KEY,v);ceTokUI(v);showToast('ok','Token enregistré');
+  if(!v){ceTst('err','Collez votre GitHub Token');return;}
+  localStorage.setItem(CE_TOK_KEY,v);ceTokUI(v);ceTst('ok','Token enregistré');
 }
 function ceTokUI(t){
   const el=document.getElementById('ce-tok-st');
-  if(t){el.style.color='#00C9A7';el.textContent='✓ Activé';document.getElementById('ce-tok').value=t.slice(0,8)+'…';}
-  else{el.style.color='rgba(240,238,255,.3)';el.textContent='Non configuré';}
+  if(t){el.style.color='#00C9A7';el.textContent='Activé';document.getElementById('ce-tok').value=t.slice(0,8)+'…';}
+  else{el.style.color='rgba(240,238,255,.3)';el.textContent='Non configuré (requis pour sauvegarder)';}
 }
 
-// ── Open / Close ────────────────────────────────────────────
+// ── Open / Close ─────────────────────────────────────────────
 async function openCalEdit(){
   document.getElementById('ce-ov').classList.add('on');
   ceTokUI(ceGetTok());
-  ceSt('inf','Chargement depuis GitHub…');
+  ceStat('inf','Chargement depuis GitHub…');
   try{
-    const tok=ceGetTok(),h={'Accept':'application/vnd.github+json'};
+    const tok=ceGetTok();
+    const h={'Accept':'application/vnd.github+json'};
     if(tok) h['Authorization']='Bearer '+tok;
-    const res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE+'?t='+Date.now(),{headers:h});
-    if(!res.ok) throw new Error('GitHub API '+res.status);
-    const j=await res.json();ceSha=j.sha;
+    const url='https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE+'?ref='+CE_BRANCH+'&t='+Date.now();
+    const res=await fetch(url,{headers:h});
+    if(!res.ok) throw new Error('GitHub '+res.status+(res.status===404?' — fichier introuvable':res.status===401?' — token invalide':''));
+    const j=await res.json();
+    ceSha=j.sha;
     const raw=atob(j.content.replace(/
 /g,''));
     const txt=new TextDecoder('utf-8').decode(new Uint8Array([...raw].map(c=>c.charCodeAt(0))));
     ceD=ceParseCsv(txt);ceRender();
-    ceSt('ok','✓ '+ceD.length+' réservations chargées');
-    setTimeout(()=>document.getElementById('ce-st').className='ce-st',3000);
+    ceStat('ok','Chargé depuis GitHub : '+ceD.length+' réservations');
+    setTimeout(()=>document.getElementById('ce-st').className='ce-st',3500);
   }catch(e){
     ceD=BOOKINGS.map(b=>({_id:ceId(),arr:b.arr,dep:b.dep,name:b.name,nat:b.nat||'',vis:b.vis||0,prix:b.prix||0}));
-    ceSha=null;ceRender();ceSt('err','⚠️ '+e.message+' — données locales');
+    ceSha=null;ceRender();
+    ceStat('err','⚠ '+e.message+' — données locales affichées');
   }
 }
 function ceClose(){document.getElementById('ce-ov').classList.remove('on');}
 
-// ── Status ──────────────────────────────────────────────────
-function ceSt(t,m){const el=document.getElementById('ce-st');el.className='ce-st '+t;el.textContent=m;}
+// ── Status ───────────────────────────────────────────────────
+function ceStat(t,m){const el=document.getElementById('ce-st');el.className='ce-st '+t;el.textContent=m;}
 
-// ── CSV ─────────────────────────────────────────────────────
+// ── CSV ──────────────────────────────────────────────────────
 function ceParseCsv(txt){
   const lines=txt.replace(/^﻿/,'').trim().split(/
 ?
 /).filter(l=>l.trim());
-  if(lines.length<2)return[];
+  if(lines.length<2) return [];
   const sep=(lines[0].match(/;/g)||[]).length>=(lines[0].match(/,/g)||[]).length?';':',';
   return lines.slice(1).map(l=>{
     const c=l.split(sep).map(x=>x.trim().replace(/^"|"$/g,''));
-    if(!c[0]&&!c[2])return null;
+    if(!c[0]&&!c[2]) return null;
     return{_id:ceId(),arr:c[0]||'',dep:c[1]||'',name:c[2]||'',nat:c[3]||'',vis:+c[4]||0,prix:+c[5]||0};
   }).filter(Boolean);
 }
@@ -836,45 +519,49 @@ function ceGenCsv(){
   return ln.join('
 ');
 }
+function ceNt(a,d){
+  try{const p=s=>{const[dd,mm,yy]=s.split('/');return new Date(+yy,+mm-1,+dd);};const n=Math.round((p(d)-p(a))/86400000);return n>0?n+'n':'—';}catch(e){return '—';}
+}
+function ceFmt(dt){return cePad(dt.getDate())+'/'+cePad(dt.getMonth()+1)+'/'+dt.getFullYear();}
+function cePD(s){if(!s)return null;const[d,m,y]=s.split('/');const dt=new Date(+y,+m-1,+d);dt.setHours(0,0,0,0);return dt;}
+function ceEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
-// ── Render table ────────────────────────────────────────────
+// ── Render table ─────────────────────────────────────────────
 function ceRender(){
   const tb=document.getElementById('ce-tbody');tb.innerHTML='';
   const sorted=[...ceD].sort((a,b)=>{const p=s=>{if(!s)return new Date(0);const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};return p(a.arr)-p(b.arr);});
   sorted.forEach(row=>{
     const i=ceD.findIndex(r=>r._id===row._id);
     const own=ceOwn(row.name);
-    const tr=document.createElement('tr');
-    if(own)tr.classList.add('ce-own-row');
+    const tr=document.createElement('tr');if(own)tr.classList.add('ce-own-row');
     tr.innerHTML=
       '<td style="padding:3px 6px;text-align:center;font-size:14px">'+(own?'🏡':'👤')+'</td>'+
-      '<td><input class="ce-ci mono" value="'+ceEsc(row.arr)+'" oninput="ceUp('+i+','arr',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+','arr',this)" style="width:105px;cursor:pointer" title="Cliquer pour ouvrir le calendrier"/></td>'+
-      '<td><input class="ce-ci mono" value="'+ceEsc(row.dep)+'" oninput="ceUp('+i+','dep',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+','dep',this)" style="width:105px;cursor:pointer" title="Cliquer pour ouvrir le calendrier"/></td>'+
-      '<td><input class="ce-ci" value="'+ceEsc(row.name)+'" oninput="ceUp('+i+','name',this.value)" style="min-width:120px"/></td>'+
-      '<td><input class="ce-ci" value="'+ceEsc(row.nat)+'" oninput="ceUp('+i+','nat',this.value)" style="min-width:90px"/></td>'+
-      '<td><input class="ce-ci num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUp('+i+','vis',this.value)"/></td>'+
-      '<td><input class="ce-ci rt" type="number" min="0" value="'+row.prix+'" oninput="ceUp('+i+','prix',this.value)"/></td>'+
+      '<td><input class="ce-ci mono" value="'+ceEsc(row.arr)+'" oninput="ceUp('+i+",'arr'"+ ',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+",'arr'"+ ',this)" style="width:105px;cursor:pointer" title="Cliquer pour le calendrier"/></td>'+
+      '<td><input class="ce-ci mono" value="'+ceEsc(row.dep)+'" oninput="ceUp('+i+",'dep'"+ ',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+",'dep'"+ ',this)" style="width:105px;cursor:pointer" title="Cliquer pour le calendrier"/></td>'+
+      '<td><input class="ce-ci" value="'+ceEsc(row.name)+'" oninput="ceUp('+i+",'name'"+ ',this.value)" style="min-width:120px"/></td>'+
+      '<td><input class="ce-ci" value="'+ceEsc(row.nat)+'" oninput="ceUp('+i+",'nat'"+ ',this.value)" style="min-width:90px"/></td>'+
+      '<td><input class="ce-ci num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUp('+i+",'vis'"+ ',this.value)"/></td>'+
+      '<td><input class="ce-ci rt" type="number" min="0" value="'+row.prix+'" oninput="ceUp('+i+",'prix'"+ ',this.value)"/></td>'+
       '<td class="ce-ni" id="ce-ni-'+i+'">'+ceNt(row.arr,row.dep)+'</td>'+
       '<td><button class="ce-delbtn" onclick="ceDel('+i+')" title="Supprimer">&#x2715;</button></td>';
     tb.appendChild(tr);
   });
 }
-
 function ceUp(i,f,v){
   ceD[i][f]=(f==='vis'||f==='prix')?(+v||0):v;
   if(f==='arr'||f==='dep'){const el=document.getElementById('ce-ni-'+i);if(el)el.textContent=ceNt(ceD[i].arr,ceD[i].dep);}
 }
 function ceDel(i){
   if(!confirm('Supprimer la réservation de "'+ceD[i].name+'" ?'))return;
-  ceD.splice(i,1);ceRender();ceSt('inf','Supprimé — cliquez Sauvegarder pour confirmer');
+  ceD.splice(i,1);ceRender();ceStat('inf','Supprimé — Sauvegarder pour confirmer');
 }
 
-// ── Push to GitHub ──────────────────────────────────────────
+// ── Push to GitHub ────────────────────────────────────────────
 async function cePush(){
   const tok=ceGetTok();
-  if(!tok){ceSt('err','Configurez votre GitHub Token');return;}
+  if(!tok){ceStat('err','Configurez votre GitHub Token');return;}
   const btn=document.getElementById('ce-save-btn');
-  btn.disabled=true;btn.textContent='Sauvegarde…';ceSt('inf','Envoi vers GitHub…');
+  btn.disabled=true;btn.textContent='Sauvegarde…';ceStat('inf','Envoi vers GitHub…');
   try{
     const csv=ceGenCsv();
     const bytes=new TextEncoder().encode('﻿'+csv);
@@ -888,16 +575,14 @@ async function cePush(){
     });
     if(!res.ok){const e=await res.json();throw new Error(e.message||'GitHub API '+res.status);}
     const result=await res.json();ceSha=result.content.sha;
-    ceSt('ok','✅ '+ceD.length+' réservations sauvegardées sur GitHub');
-    btn.textContent='✓ Sauvegardé !';showToast('ok','✅ Sauvegardé sur GitHub');
+    ceStat('ok','Sauvegardé sur GitHub : '+ceD.length+' réservations');
+    btn.textContent='Sauvegardé !';ceTst('ok','Sauvegardé sur GitHub');
     setTimeout(async()=>{btn.textContent='Sauvegarder';btn.disabled=false;await syncFromSheet();},2000);
   }catch(e){
-    ceSt('err','❌ '+e.message);showToast('err','❌ '+e.message);
+    ceStat('err','Erreur : '+e.message);ceTst('err','Erreur : '+e.message);
     btn.textContent='Sauvegarder';btn.disabled=false;
   }
 }
-
-// ── Download CSV ────────────────────────────────────────────
 function ceDl(){
   const blob=new Blob(['﻿'+ceGenCsv()],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -909,23 +594,18 @@ let calY=new Date().getFullYear(),calM=new Date().getMonth();
 let calSel={arr:null,dep:null},calStep='arr';
 let calEditIdx=null,calEditFld=null,calEditInp=null;
 
-// Open add modal (new row)
 function ceOpenAdd(){
   calEditIdx=null;calEditFld=null;calEditInp=null;
   calY=new Date().getFullYear();calM=new Date().getMonth();
   calSel={arr:null,dep:null};calStep='arr';
   ['ce-a-name','ce-a-nat'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('ce-a-vis').value=2;
-  document.getElementById('ce-a-prix').value=0;
+  document.getElementById('ce-a-vis').value=2;document.getElementById('ce-a-prix').value=0;
   document.getElementById('ce-a-own').checked=false;
-  document.getElementById('ce-d-arr').textContent='—';
-  document.getElementById('ce-d-dep').textContent='—';
+  document.getElementById('ce-d-arr').textContent='—';document.getElementById('ce-d-dep').textContent='—';
   document.getElementById('ce-add-title').textContent='Nouvelle réservation';
-  document.getElementById('ce-add-ov').classList.add('on');
-  ceRenderCal();
+  document.getElementById('ce-add-ov').classList.add('on');ceRenderCal();
 }
 
-// Open edit modal (existing row, clicking on date cell)
 function ceOpenEdit(i,fld,inp){
   calEditIdx=i;calEditFld=fld;calEditInp=inp;
   const row=ceD[i];
@@ -935,39 +615,30 @@ function ceOpenEdit(i,fld,inp){
   if(ref){calY=ref.getFullYear();calM=ref.getMonth();}
   else{calY=new Date().getFullYear();calM=new Date().getMonth();}
   calStep=fld;
-  document.getElementById('ce-a-name').value=row.name||'';
-  document.getElementById('ce-a-nat').value=row.nat||'';
-  document.getElementById('ce-a-vis').value=row.vis||2;
-  document.getElementById('ce-a-prix').value=row.prix||0;
+  document.getElementById('ce-a-name').value=row.name||'';document.getElementById('ce-a-nat').value=row.nat||'';
+  document.getElementById('ce-a-vis').value=row.vis||2;document.getElementById('ce-a-prix').value=row.prix||0;
   document.getElementById('ce-a-own').checked=ceOwn(row.name);
   document.getElementById('ce-d-arr').textContent=arrDt?ceFmt(arrDt):'—';
   document.getElementById('ce-d-dep').textContent=depDt?ceFmt(depDt):'—';
   document.getElementById('ce-add-title').textContent='Modifier la réservation';
-  document.getElementById('ce-add-ov').classList.add('on');
-  ceRenderCal();
+  document.getElementById('ce-add-ov').classList.add('on');ceRenderCal();
 }
 
 function ceCloseAdd(){document.getElementById('ce-add-ov').classList.remove('on');calEditIdx=null;}
 
 function ceCalNav(dir){
-  calM+=dir;
-  if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;calY++;}
-  ceRenderCal();
+  calM+=dir;if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;calY++;}ceRenderCal();
 }
 
 function ceCalClick(y,m,d){
   const dt=new Date(y,m,d);dt.setHours(0,0,0,0);
-  const today=new Date();today.setHours(0,0,0,0);
   if(calStep==='arr'){
     calSel={arr:dt,dep:null};calStep='dep';
     document.getElementById('ce-d-dep').textContent='—';
   }else if(calStep==='dep'){
     if(calSel.arr&&dt<=calSel.arr){calSel={arr:dt,dep:null};calStep='dep';document.getElementById('ce-d-dep').textContent='—';}
     else{calSel.dep=dt;calStep='done';}
-  }else{
-    calSel={arr:dt,dep:null};calStep='dep';
-    document.getElementById('ce-d-dep').textContent='—';
-  }
+  }else{calSel={arr:dt,dep:null};calStep='dep';document.getElementById('ce-d-dep').textContent='—';}
   if(calSel.arr)document.getElementById('ce-d-arr').textContent=ceFmt(calSel.arr);
   if(calSel.dep)document.getElementById('ce-d-dep').textContent=ceFmt(calSel.dep);
   ceRenderCal();
@@ -978,16 +649,12 @@ function ceRenderCal(){
   if(calStep==='arr')stepEl.textContent="1. Sélectionnez la date d'arrivée";
   else if(calStep==='dep')stepEl.textContent='2. Sélectionnez la date de départ';
   else stepEl.textContent='✓ Dates sélectionnées';
-
   document.getElementById('ce-cal-lbl').textContent=ceMOS[calM]+' '+calY;
-
   const first=new Date(calY,calM,1),last=new Date(calY,calM+1,0);
   let dow=first.getDay();dow=dow===0?6:dow-1;
   const today=new Date();today.setHours(0,0,0,0);
   const arrT=calSel.arr?calSel.arr.getTime():null,depT=calSel.dep?calSel.dep.getTime():null;
-
-  let html='';
-  ceWDS.forEach(j=>{html+='<div class="ce-cal-dh">'+j+'</div>';});
+  let html='';ceWDS.forEach(j=>{html+='<div class="ce-cal-dh">'+j+'</div>';});
   for(let i=0;i<dow;i++)html+='<div></div>';
   for(let d=1;d<=last.getDate();d++){
     const dt=new Date(calY,calM,d);dt.setHours(0,0,0,0);const t=dt.getTime();
@@ -1006,33 +673,23 @@ function ceConfirmAdd(){
   const nat=document.getElementById('ce-a-nat').value.trim();
   const vis=+document.getElementById('ce-a-vis').value||2;
   const prix=+document.getElementById('ce-a-prix').value||0;
-
-  // Edit existing row
+  const isOwn=document.getElementById('ce-a-own').checked;
+  const finalName=isOwn?'Propriétaire':name;
   if(calEditIdx!==null){
     const row=ceD[calEditIdx];
-    if(calSel.arr)row.arr=ceFmt(calSel.arr);
-    if(calSel.dep)row.dep=ceFmt(calSel.dep);
-    row.name=name||row.name;row.nat=nat;row.vis=vis;row.prix=prix;
+    if(calSel.arr)row.arr=ceFmt(calSel.arr);if(calSel.dep)row.dep=ceFmt(calSel.dep);
+    row.name=finalName||row.name;row.nat=nat;row.vis=vis;row.prix=prix;
     if(calEditInp)calEditInp.value=calEditFld==='arr'?row.arr:row.dep;
-    ceRender();ceCloseAdd();
-    ceSt('inf','Modifié — cliquez Sauvegarder pour confirmer');
-    return;
+    ceRender();ceCloseAdd();ceStat('inf','Modifié — Sauvegarder pour confirmer');return;
   }
-
-  // New row
-  if(!calSel.arr||!calSel.dep){showToast('err','Sélectionnez les deux dates');return;}
-  if(!name){showToast('err','Renseignez le nom du locataire');document.getElementById('ce-a-name').focus();return;}
-  ceD.push({_id:ceId(),arr:ceFmt(calSel.arr),dep:ceFmt(calSel.dep),name,nat,vis,prix});
+  if(!calSel.arr||!calSel.dep){ceTst('err','Sélectionnez les deux dates');return;}
+  if(!finalName){ceTst('err','Renseignez le nom du locataire');document.getElementById('ce-a-name').focus();return;}
+  ceD.push({_id:ceId(),arr:ceFmt(calSel.arr),dep:ceFmt(calSel.dep),name:finalName,nat,vis,prix});
   ceD.sort((a,b)=>{const p=s=>{if(!s)return new Date(0);const[d,m,y]=s.split('/');return new Date(+y,+m-1,+d);};return p(a.arr)-p(b.arr);});
-  ceRender();ceCloseAdd();
-  showToast('ok','Réservation ajoutée — cliquez Sauvegarder');
-  ceSt('inf','Ajoutée — cliquez Sauvegarder pour confirmer');
+  ceRender();ceCloseAdd();ceTst('ok','Réservation ajoutée — Sauvegarder pour confirmer');ceStat('inf','Ajouté — Sauvegarder pour confirmer');
 }
 
-// Close on Escape
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ceClose();ceCloseAdd();}
-});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){ceClose();ceCloseAdd();}});
 </script>
 </body>
 </html>
