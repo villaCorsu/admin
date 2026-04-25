@@ -255,3 +255,10 @@ function ceConfirmAdd(){
   ceStat('inf','Ajoutée — Sauvegarder pour confirmer');
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){ceClose();ceCloseAdd();}});
+
+// Override the stub with the real function and drain any queued calls
+window.openCalEdit = openCalEdit;
+if(window._ceQueue && window._ceQueue.length) {
+  window._ceQueue.forEach(function(cmd){ if(cmd==='open') openCalEdit(); });
+  window._ceQueue = [];
+}

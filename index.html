@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>if(sessionStorage.getItem('vc_session')!=='6025'){window.location.replace('login.html');}</script>
+<script>
+// Stub openCalEdit — forwards call once caledit.js is loaded
+window._ceQueue = [];
+window.openCalEdit = function() { window._ceQueue.push('open'); };
+</script>
 <style>
 /* ─── CalEdit ─── */
 .ce-ov{position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto;backdrop-filter:blur(4px)}
@@ -225,6 +230,7 @@
   <footer class="app-footer">Villa Corsu Calendar &mdash; <span id="footer-version">v1.0</span> &mdash; <a href="setup.html">Configuration synchro</a></footer>
   <script src="data.js"></script>
   <script src="calendar.js"></script>
+  <script src="caledit.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof APP_VERSION !== 'undefined') {
@@ -524,6 +530,5 @@ document.addEventListener('keydown',e=>{
   </div>
 </div>
 
-<script src="caledit.js"></script>
 </body>
 </html>
