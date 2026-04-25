@@ -7,6 +7,92 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>if(sessionStorage.getItem('vc_session')!=='6025'){window.location.replace('login.html');}</script>
+<style>
+/* ─── CalEdit ─── */
+.ce-ov{position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto;backdrop-filter:blur(4px)}
+.ce-ov.on{display:flex}
+.ce-box{background:#1a1928;border:.5px solid rgba(255,255,255,.15);border-radius:20px;width:100%;max-width:920px;margin:0 auto;overflow:hidden}
+.ce-hd{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:.5px solid rgba(255,255,255,.1);background:rgba(0,201,167,.07);flex-wrap:wrap;gap:8px}
+.ce-hd-l{display:flex;align-items:center;gap:10px}
+.ce-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#00C9A7,#00a88d);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ce-hd-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ce-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;border:none}
+.ce-btn-add{background:rgba(108,99,255,.3);color:#c4beff}
+.ce-btn-add:hover{background:rgba(108,99,255,.5)}
+.ce-btn-save{background:linear-gradient(135deg,#00C9A7,#00a88d);color:#fff}
+.ce-btn-save:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.ce-btn-save:disabled{opacity:.4;cursor:not-allowed}
+.ce-btn-dl{background:rgba(255,255,255,.07);color:rgba(240,238,255,.5)}
+.ce-btn-dl:hover{background:rgba(255,255,255,.13)}
+.ce-x{background:none;border:none;color:rgba(240,238,255,.35);cursor:pointer;font-size:22px;line-height:1;padding:2px 6px}
+.ce-x:hover{color:rgba(240,238,255,.8)}
+.ce-tok{padding:.55rem 1.5rem;border-bottom:.5px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,.02)}
+.ce-tok label{font-size:11px;font-weight:700;color:rgba(240,238,255,.35);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.ce-tok-inp{flex:1;min-width:150px;max-width:260px;background:rgba(255,255,255,.07);border:.5px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;font-family:monospace;color:#f0eeff;outline:none}
+.ce-tok-inp:focus{border-color:rgba(0,201,167,.5)}
+.ce-tok-save{padding:5px 11px;background:rgba(0,201,167,.2);border:.5px solid rgba(0,201,167,.4);border-radius:6px;color:#00C9A7;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.ce-tok-st{font-size:11px;margin-left:auto;white-space:nowrap}
+.ce-st{display:none;padding:8px 1.5rem;font-size:12px;font-weight:600;border-bottom:.5px solid rgba(255,255,255,.06)}
+.ce-st.ok{display:block;background:rgba(0,201,167,.12);color:#00C9A7}
+.ce-st.err{display:block;background:rgba(255,107,157,.12);color:#FF6B9D}
+.ce-st.inf{display:block;background:rgba(108,99,255,.12);color:#a39dff}
+.ce-info{padding:.55rem 1.5rem;background:rgba(255,179,71,.04);border-bottom:.5px solid rgba(255,179,71,.1);font-size:12px;color:rgba(255,179,71,.7);display:flex;align-items:center;gap:7px}
+.ce-body{overflow-x:auto;padding:1rem 1.5rem 1.5rem}
+.ce-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.ce-tbl thead tr{border-bottom:1.5px solid rgba(255,255,255,.1)}
+.ce-tbl th{padding:7px 9px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(240,238,255,.3);white-space:nowrap}
+.ce-tbl tbody tr{border-bottom:.5px solid rgba(255,255,255,.05);transition:background .12s}
+.ce-tbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.ce-tbl tbody tr.ce-own-row{background:rgba(0,201,167,.04)}
+.ce-ci{background:transparent;border:none;color:#f0eeff;font-family:inherit;font-size:13px;width:100%;padding:7px 9px;border-radius:6px;outline:none;transition:background .12s}
+.ce-ci:focus{background:rgba(108,99,255,.18)}
+.ce-ci.mono{font-family:monospace;font-size:12px;letter-spacing:.02em}
+.ce-ci.num{text-align:center;width:65px}
+.ce-ci.rt{text-align:right;width:80px}
+.ce-ni{padding:7px 9px;font-size:12px;color:rgba(240,238,255,.3);text-align:center;white-space:nowrap;font-family:monospace}
+.ce-delbtn{background:none;border:none;cursor:pointer;color:rgba(255,107,157,.25);padding:4px 7px;border-radius:6px;font-size:15px;line-height:1;transition:all .15s}
+.ce-delbtn:hover{color:#FF6B9D;background:rgba(255,107,157,.12)}
+.ce-add-ov{position:fixed;inset:0;background:rgba(10,10,20,.9);z-index:400;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px)}
+.ce-add-ov.on{display:flex}
+.ce-add-box{background:#1a1928;border:.5px solid rgba(255,255,255,.15);border-radius:20px;width:100%;max-width:640px;padding:1.6rem}
+.ce-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.1rem}
+.ce-cal-wrap{background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);border-radius:12px;padding:.85rem}
+.ce-cal-step{font-size:11px;font-weight:700;color:#00C9A7;text-transform:uppercase;letter-spacing:.6px;text-align:center;margin-bottom:.55rem}
+.ce-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.ce-cal-nbtn{background:rgba(255,255,255,.07);border:.5px solid rgba(255,255,255,.12);border-radius:6px;width:26px;height:26px;cursor:pointer;color:rgba(240,238,255,.55);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.ce-cal-nbtn:hover{background:rgba(255,255,255,.14)}
+.ce-cal-lbl{font-size:13px;font-weight:700;color:#f0eeff}
+.ce-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.ce-cal-dh{text-align:center;font-size:9px;font-weight:700;color:rgba(240,238,255,.25);padding:3px 0;text-transform:uppercase}
+.ce-cal-d{text-align:center;font-size:12px;padding:5px 1px;border-radius:5px;cursor:pointer;color:rgba(240,238,255,.55);transition:all .1s;line-height:1.3;user-select:none}
+.ce-cal-d:hover{background:rgba(255,255,255,.1);color:#f0eeff}
+.ce-cal-past{color:rgba(240,238,255,.18)!important;cursor:default}
+.ce-cal-past:hover{background:transparent!important}
+.ce-cal-arr{background:#FF8C00!important;color:#fff!important;font-weight:700;border-radius:5px 0 0 5px}
+.ce-cal-dep{background:#00C9A7!important;color:#fff!important;font-weight:700;border-radius:0 5px 5px 0}
+.ce-cal-rng{background:rgba(255,140,0,.15)!important;color:#f0eeff!important;border-radius:0!important}
+.ce-cal-leg{display:flex;gap:10px;justify-content:center;margin-top:.55rem}
+.ce-cal-leg span{display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(240,238,255,.35)}
+.ce-cal-leg i{width:9px;height:9px;border-radius:2px;flex-shrink:0;display:inline-block}
+.ce-ds{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:.6rem}
+.ce-ds-b{text-align:center;flex:1}
+.ce-ds-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(240,238,255,.3);margin-bottom:2px}
+.ce-ds-v{font-family:monospace;font-size:13px;font-weight:600;color:rgba(240,238,255,.4)}
+.ce-ds-v.arr{color:#FF8C00}
+.ce-ds-v.dep{color:#00C9A7}
+.ce-ds-arr{color:rgba(240,238,255,.25);font-size:13px}
+.ce-ff{display:flex;flex-direction:column;gap:.75rem}
+.ce-fl label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(240,238,255,.35);margin-bottom:.28rem}
+.ce-fi{width:100%;background:rgba(255,255,255,.07);border:.5px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;color:#f0eeff;outline:none;transition:border-color .15s}
+.ce-fi:focus{border-color:rgba(0,201,167,.5)}
+.ce-fi::placeholder{color:rgba(240,238,255,.2)}
+.ce-fl-row{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+.ce-add-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:1.4rem}
+.ce-add-cancel{padding:9px 16px;background:rgba(255,255,255,.07);border:.5px solid rgba(255,255,255,.15);border-radius:9px;color:rgba(240,238,255,.5);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.ce-add-ok{padding:9px 18px;background:linear-gradient(135deg,#00C9A7,#00a88d);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;transition:opacity .15s}
+.ce-add-ok:hover{opacity:.88}
+@media(max-width:600px){.ce-add-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
   <div class="page-wrapper">
