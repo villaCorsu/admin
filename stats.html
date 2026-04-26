@@ -142,14 +142,27 @@ body{
 
 /* ── Responsive ── */
 @media(max-width:700px){
-  .charts-grid{grid-template-columns:1fr}
+  .charts-grid{grid-template-columns:1fr;gap:10px}
   .chart-card.wide{grid-column:1}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .hero-year{font-size:28px}
+  .kpi-value{font-size:18px}
+  .kpi-label{font-size:10px}
+  .page{padding:1rem .75rem 4rem}
+  .chart-wrap.h220{height:200px}
+  .chart-wrap.h260{height:200px}
+  .chart-wrap.h300{height:200px}
+  .chart-card{padding:.9rem}
+  .chart-title{font-size:13px}
+}
+/* Mobile: charts scroll horizontally if needed */
+@media(max-width:480px){
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
-  .hero-year{font-size:32px}
-  .kpi-value{font-size:20px}
-  .page{padding:1.25rem 1rem 4rem}
-  .chart-wrap.h260{height:220px}
-  .chart-wrap.h300{height:240px}
+  .chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .chart-wrap canvas{min-width:300px}
+  .charts-grid{gap:8px}
+  .page{padding:.75rem .6rem 3rem}
+  .chart-wrap.h220,.chart-wrap.h260,.chart-wrap.h300{height:180px}
 }
 </style>
 <script>if(sessionStorage.getItem('vc_session')!=='6025'){window.location.replace('login.html');}</script>
@@ -172,7 +185,6 @@ body{
               Calendrier
             </a>
             <a class="hnav-link active" href="stats.html">📊 Statistiques</a>
-            <a class="hnav-link" href="notifications.html">🔔 Notifications</a>
           </div>
           <button class="sync-btn" id="sync-btn" onclick="doSync()">
             <svg id="sync-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.0" stroke-linecap="round" stroke-linejoin="round">
@@ -262,9 +274,17 @@ const KPI_ICONS   = ['💰','🌙','📊','💎','🏠','🌍'];
 const KPI_COLORS  = ['#6C63FF','#FF6B9D','#00C9A7','#FFB347','#4FC3F7','#FF7043'];
 
 // ── Chart defaults ────────────────────────────────────────────
+const isMobile = window.innerWidth < 480;
 Chart.defaults.font.family = '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-Chart.defaults.font.size   = 12;
+Chart.defaults.font.size   = isMobile ? 10 : 12;
 Chart.defaults.color       = 'rgba(240,238,255,.55)';
+// Shared mobile-friendly plugin config
+const mobilePlugins = {
+  legend:{ labels:{ boxWidth: isMobile?10:13, font:{ size: isMobile?10:12 } } }
+};
+// Shared mobile-friendly axis ticks
+const mobileTicks = { maxTicksLimit: isMobile?4:8, font:{ size: isMobile?9:11 } };
+const mobileTicksY = { maxTicksLimit: isMobile?4:6, font:{ size: isMobile?9:11 } };
 
 const GC = 'rgba(255,255,255,.06)';
 const baseScales = {
