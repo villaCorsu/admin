@@ -87,7 +87,8 @@ function cePD(s){
 function ceEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/\x22/g,'\x26quot;').replace(/</g,'&lt;');}
 
 function ceRender(){
-  var tb=document.getElementById('ce-tbody');tb.innerHTML='';
+  var tb=document.getElementById('ce-tbody');
+  tb.innerHTML='';
   var sorted=ceD.slice().sort(function(a,b){
     function p(s){if(!s)return new Date(0);var x=s.split('/');return new Date(+x[2],+x[1]-1,+x[0]);}
     return p(a.arr)-p(b.arr);
@@ -96,17 +97,59 @@ function ceRender(){
     var i=ceD.indexOf(row);
     var own=ceOwn(row.name);
     var tr=document.createElement('tr');
-    if(own)tr.classList.add('ce-own-row');
-    tr.innerHTML=
-      '<td style="padding:3px 6px;text-align:center;font-size:14px">'+(own?'&#127968;':'&#128100;')+'</td>'+
-      '<td><input class="ce-ci mono" value="'+ceEsc(row.arr)+'" oninput="ceUp('+i+',\'arr\',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+',\'arr\',this)" style="width:105px;cursor:pointer"/></td>'+
-      '<td><input class="ce-ci mono" value="'+ceEsc(row.dep)+'" oninput="ceUp('+i+',\'dep\',this.value)" placeholder="JJ/MM/AAAA" onclick="ceOpenEdit('+i+',\'dep\',this)" style="width:105px;cursor:pointer"/></td>'+
-      '<td><input class="ce-ci" value="'+ceEsc(row.name)+'" oninput="ceUp('+i+',\'name\',this.value)" style="min-width:120px"/></td>'+
-      '<td><input class="ce-ci" value="'+ceEsc(row.nat)+'" oninput="ceUp('+i+',\'nat\',this.value)" style="min-width:90px"/></td>'+
-      '<td><input class="ce-ci num" type="number" min="1" max="20" value="'+row.vis+'" oninput="ceUp('+i+',\'vis\',this.value)"/></td>'+
-      '<td><input class="ce-ci rt" type="number" min="0" value="'+row.prix+'" oninput="ceUp('+i+',\'prix\',this.value)"/></td>'+
-      '<td class="ce-ni" id="ce-ni-'+i+'">'+ceNt(row.arr,row.dep)+'</td>'+
-      '<td><button class="ce-delbtn" onclick="ceDel('+i+')" title="Supprimer">&#x2715;</button></td>';
+    if(own) tr.classList.add('ce-own-row');
+    // Icon
+    var td0=document.createElement('td');
+    td0.style.cssText='padding:3px 6px;text-align:center;font-size:14px';
+    td0.textContent=own?'\uD83C\uDFE1':'\uD83D\uDC64';
+    tr.appendChild(td0);
+    // Date inputs with calendar picker
+    function makeDateTd(fld,val){
+      var td=document.createElement('td');
+      var inp=document.createElement('input');
+      inp.className='ce-ci mono';inp.value=val||'';
+      inp.placeholder='JJ/MM/AAAA';inp.style.width='105px';inp.style.cursor='pointer';
+      inp.title='Cliquer pour le calendrier';
+      (function(f){
+        inp.addEventListener('input',function(){ceUp(i,f,this.value);});
+        inp.addEventListener('click',function(){ceOpenEdit(i,f,this);});
+      })(fld);
+      td.appendChild(inp);return td;
+    }
+    tr.appendChild(makeDateTd('arr',row.arr));
+    tr.appendChild(makeDateTd('dep',row.dep));
+    // Text inputs
+    function makeTextTd(fld,val,minW){
+      var td=document.createElement('td');
+      var inp=document.createElement('input');
+      inp.className='ce-ci';inp.value=val||'';inp.style.minWidth=minW;
+      (function(f){inp.addEventListener('input',function(){ceUp(i,f,this.value);});})(fld);
+      td.appendChild(inp);return td;
+    }
+    tr.appendChild(makeTextTd('name',row.name,'120px'));
+    tr.appendChild(makeTextTd('nat',row.nat,'90px'));
+    // Number inputs
+    function makeNumTd(fld,val,align){
+      var td=document.createElement('td');
+      var inp=document.createElement('input');
+      inp.type='number';inp.className='ce-ci';inp.value=val||0;
+      inp.style.textAlign=align;inp.style.width=align==='center'?'65px':'80px';
+      if(fld==='vis'){inp.min='1';inp.max='20';}else{inp.min='0';}
+      (function(f){inp.addEventListener('input',function(){ceUp(i,f,this.value);});})(fld);
+      td.appendChild(inp);return td;
+    }
+    tr.appendChild(makeNumTd('vis',row.vis,'center'));
+    tr.appendChild(makeNumTd('prix',row.prix,'right'));
+    // Nights
+    var tdNt=document.createElement('td');
+    tdNt.className='ce-ni';tdNt.id='ce-ni-'+i;tdNt.textContent=ceNt(row.arr,row.dep);
+    tr.appendChild(tdNt);
+    // Delete
+    var tdDel=document.createElement('td');
+    var btnDel=document.createElement('button');
+    btnDel.className='ce-delbtn';btnDel.title='Supprimer';btnDel.innerHTML='&#x2715;';
+    (function(idx){btnDel.addEventListener('click',function(){ceDel(idx);});})(i);
+    tdDel.appendChild(btnDel);tr.appendChild(tdDel);
     tb.appendChild(tr);
   });
 }
