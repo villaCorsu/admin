@@ -140,8 +140,13 @@ function parseCsv(text) {
 // ── Chargement du CSV ─────────────────────────────────────────
 async function loadSheetData() {
   const url = "https://villacorsu.github.io/admin/reservations.csv?t=" + Date.now();
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error("Fichier reservations.csv introuvable (HTTP " + res.status + ")");
+  let res;
+  try { res = await fetch(url, { cache: "no-store", mode: "cors" }); }
+  catch(e) { throw new Error("Réseau inaccessible : " + e.message); }
+  if (!res.ok) throw new Error("reservations.csv HTTP " + res.status + " — vérifiez villacorsu.github.io/admin/");
   const text = await res.text();
-  return parseCsv(text);
+  if (!text || !text.trim()) throw new Error("reservations.csv est vide");
+  const rows = parseCsv(text);
+  if (rows.length === 0) throw new Error("Aucune réservation valide dans le CSV");
+  return rows;
 }

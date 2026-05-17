@@ -377,10 +377,10 @@ function setSyncBar(state,msg){
 async function doSync(){
   const btn=document.getElementById('sync-btn'),icon=document.getElementById('sync-icon');
   btn.disabled=true; icon.classList.add('spinning');
-  setSyncBar('loading','⏳ Synchronisation…');
+  setSyncBar('loading','⏳ Rechargement de reservations.csv…');
   try{
     const raw=await loadSheetData(); BOOKINGS=enrichBookings(raw);
-    setSyncBar('ok',`✅ ${raw.length} réservations chargées`); buildAll();
+    const t2=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); setSyncBar('ok',`✅ ${raw.length} réservations — ${t2}`); buildAll();
   }catch(e){ setSyncBar('err',`❌ ${e.message}`); }
   finally{ btn.disabled=false; icon.classList.remove('spinning'); }
 }
@@ -624,13 +624,16 @@ let html=`<table class="comp-table"><thead><tr>
 (async function init(){
   BOOKINGS=enrichBookings(FALLBACK_DATA);
   buildAll();
-  setSyncBar('loading','⏳ Chargement depuis Google Sheets…');
+  setSyncBar('loading','⏳ Chargement depuis reservations.csv…');
   try{
-    const raw=await loadSheetData(); BOOKINGS=enrichBookings(raw);
+    const raw=await loadSheetData();
+    BOOKINGS=enrichBookings(raw);
     const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    setSyncBar('ok',`✅ ${raw.length} réservations — ${t}`);
+    setSyncBar('ok',`✅ ${raw.length} réservations chargées depuis reservations.csv — ${t}`);
     buildAll();
-  }catch(e){ setSyncBar('err',`⚠️ Données locales — ${e.message}`); }
+  }catch(e){
+    setSyncBar('err',`⚠️ Erreur chargement CSV : ${e.message} — données de secours affichées`);
+  }
 })();
 </script>
 </body>
