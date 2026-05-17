@@ -511,42 +511,54 @@ function buildVisitors(years,allStats){
 }
 
 // ── Price per night ───────────────────────────────────────────
-let activePriceYear=null;
+let activePriceYears=[];
 function buildPrice(years){
-  if(!activePriceYear||!years.includes(activePriceYear)) activePriceYear=years[years.length-1];
+  if(!activePriceYears.length) activePriceYears=[...years]; // toutes les années par défaut
   const wrap=document.getElementById('price-chips');
   const colorClass=['c1','c2','c3','c4','c5'];
-  wrap.innerHTML=years.map((y,i)=>`<button class="chip ${colorClass[i%colorClass.length]}${y===activePriceYear?' active':''}" onclick="selectPriceYear(${y})">${y}</button>`).join('');
+  wrap.innerHTML=years.map((y,i)=>`<button class="chip ${colorClass[i%colorClass.length]}${activePriceYears.includes(y)?' active':''}" onclick="togglePriceYear(${y})">${y}</button>`).join('');
   renderPriceChart(years);
 }
-function selectPriceYear(y){
-  activePriceYear=y;
-  document.querySelectorAll('#price-chips .chip').forEach((b,i)=>{
-    const yr=+b.textContent; b.className=b.className.replace(' active','');
-    if(yr===y) b.className+=' active';
+function togglePriceYear(y){
+  const i=activePriceYears.indexOf(y);
+  if(i>=0){if(activePriceYears.length>1)activePriceYears.splice(i,1);}else activePriceYears.push(y);
+  document.querySelectorAll('#price-chips .chip').forEach(b=>{
+    b.className=b.className.replace(' active','');
+    if(activePriceYears.includes(+b.textContent)) b.className+=' active';
   });
   renderPriceChart(getYears());
 }
 function renderPriceChart(years){
   kill('price');
-  const data=priceByMonth(activePriceYear);
-  const yi=years.indexOf(activePriceYear);
-  const col=PALETTE[yi%PALETTE.length];
   const ctx=document.getElementById('chart-price').getContext('2d');
-  const g=ctx.createLinearGradient(0,0,0,260);
-  g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00');
+  const datasets=activePriceYears.slice().sort().map((y)=>{
+    const yi=years.indexOf(y);
+    const col=PALETTE[yi%PALETTE.length];
+    const data=priceByMonth(y);
+    const g=ctx.createLinearGradient(0,0,0,260);
+    g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00');
+    return{
+      label:`Prix/nuit ${y}`,
+      data:data.map(v=>v??0),
+      borderColor:col,backgroundColor:activePriceYears.length===1?g:'transparent',
+      borderWidth:2.5,
+      pointRadius:data.map(v=>v?(isMobile?3:5):0),pointHoverRadius:isMobile?5:7,
+      pointBackgroundColor:col,pointBorderColor:'#0f0f1a',pointBorderWidth:2,
+      fill:activePriceYears.length===1,tension:.4,spanGaps:false,
+    };
+  });
   charts.price=new Chart(ctx,{
     type:'line',
-    data:{labels:isMobile?MONTHS_SHORT:MONTHS,datasets:[{
-      label:`Prix/nuit ${activePriceYear}`,data:data.map(v=>v??0),
-      borderColor:col,backgroundColor:g,borderWidth:3,
-      pointRadius:data.map(v=>v?(isMobile?3:6):0),pointHoverRadius:isMobile?5:8,
-      pointBackgroundColor:col,pointBorderColor:'#0f0f1a',pointBorderWidth:2,
-      fill:true,tension:.4,spanGaps:false,
-    }]},
+    data:{labels:isMobile?MONTHS_SHORT:MONTHS,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y>0?`${c.parsed.y} € / nuit`:'Pas de location',title:c=>MONTHS_FULL[c[0].dataIndex]}}},
+      plugins:{
+        ...baseLegend&&{legend:{...baseLegend}},
+        tooltip:{callbacks:{
+          label:c=>c.parsed.y>0?`${c.dataset.label} : ${c.parsed.y} €/nuit`:'Pas de location',
+          title:c=>MONTHS_FULL[c[0].dataIndex]
+        }}
+      },
       scales:{...baseScales,y:{...baseScales.y,min:0,ticks:{...baseScales.y.ticks,callback:v=>v>0?`${v} €`:''}}}
     }
   });
