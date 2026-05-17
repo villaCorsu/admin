@@ -1,7 +1,32 @@
 
-// CALEDIT
-const CE_OWNER='villaCorsu',CE_REPO='admin',CE_FILE='reservations.csv',CE_BRANCH='main';
-const CE_TOK_KEY='vc_gh_token';
+// CALEDIT - config stockée dans localStorage
+const CE_TOK_KEY  = 'vc_gh_token';
+const CE_CFG_KEY  = 'vc_ce_cfg';
+
+function ceCfg(){
+  try{ return Object.assign({owner:'villaCorsu',repo:'admin',file:'reservations.csv',branch:'main'},
+    JSON.parse(localStorage.getItem(CE_CFG_KEY)||'{}')); }
+  catch(e){ return {owner:'villaCorsu',repo:'admin',file:'reservations.csv',branch:'main'}; }
+}
+function ceSaveCfg(){
+  var cfg={
+    owner: document.getElementById('ce-cfg-owner').value.trim(),
+    repo:  document.getElementById('ce-cfg-repo').value.trim(),
+    branch:document.getElementById('ce-cfg-branch').value.trim()||'main',
+    file:  'reservations.csv'
+  };
+  localStorage.setItem(CE_CFG_KEY,JSON.stringify(cfg));
+  ceStat('ok','Configuration sauvegard\u00e9e');
+  setTimeout(function(){openCalEdit();},600);
+}
+function ceLoadCfgToForm(){
+  var cfg=ceCfg();
+  document.getElementById('ce-cfg-owner').value  = cfg.owner;
+  document.getElementById('ce-cfg-repo').value   = cfg.repo;
+  document.getElementById('ce-cfg-branch').value = cfg.branch;
+}
+
+let ceD=[],ceSha=null,_cid=0;
 let ceD=[],ceSha=null,_cid=0;
 const ceId=()=>++_cid;
 const ceOwn=n=>String(n).toLowerCase().indexOf('propri')>=0;
@@ -15,9 +40,15 @@ function ceTst(type,msg){
   clearTimeout(ceTst._t);ceTst._t=setTimeout(function(){el.classList.remove('show');},4200);
 }
 
-function ceGetTok(){return localStorage.getItem(CE_TOK_KEY)||'';}
+function ceGetTok(){
+  var raw=localStorage.getItem(CE_TOK_KEY)||'';
+  // Strip any non-ASCII or non-printable characters that would break fetch headers
+  return raw.replace(/[^\x20-\x7E]/g,'').trim();
+}
 function ceSaveTok(){
-  const v=document.getElementById('ce-tok').value.trim();
+  // Strip non-ASCII characters before saving
+  var raw=document.getElementById('ce-tok').value;
+  var v=raw.replace(/[^\x20-\x7E]/g,'').trim();
   if(!v){ceTst('err','Collez votre GitHub Token');return;}
   localStorage.setItem(CE_TOK_KEY,v);ceTokUI(v);ceTst('ok','Token enregistr\u00e9');
 }
@@ -30,12 +61,14 @@ function ceTokUI(t){
 async function openCalEdit(){
   document.getElementById('ce-ov').classList.add('on');
   ceTokUI(ceGetTok());
+  ceLoadCfgToForm();
   ceStat('inf','Chargement depuis GitHub...');
   try{
     const tok=ceGetTok();
+    // Encode as Latin-1 safe strings for fetch headers
     const h={'Accept':'application/vnd.github+json'};
-    if(tok) h['Authorization']='Bearer '+tok;
-    const url='https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE+'?ref='+CE_BRANCH+'&t='+Date.now();
+    if(tok) h['Authorization']='Bearer '+tok.replace(/[^\x20-\x7E]/g,'');
+    var _cfg=ceCfg();var url='https://api.github.com/repos/'+_cfg.owner+'/'+_cfg.repo+'/contents/'+_cfg.file+'?ref='+_cfg.branch+'&t='+Date.now();
     const res=await fetch(url,{headers:h});
     if(!res.ok) throw new Error('GitHub '+res.status+(res.status===404?' fichier introuvable':res.status===401?' token invalide':''));
     const j=await res.json();
@@ -94,7 +127,7 @@ function ceRender(){
     return p(a.arr)-p(b.arr);
   });
   sorted.forEach(function(row){
-    var i=ceD.indexOf(row);
+    var i=ceD.findIndex(function(r){return r._id===row._id;});
     var own=ceOwn(row.name);
     var tr=document.createElement('tr');
     if(own) tr.classList.add('ce-own-row');
@@ -154,6 +187,7 @@ function ceRender(){
   });
 }
 function ceUp(i,f,v){
+  if(i<0||i>=ceD.length)return;
   ceD[i][f]=(f==='vis'||f==='prix')?(+v||0):v;
   if(f==='arr'||f==='dep'){var el=document.getElementById('ce-ni-'+i);if(el)el.textContent=ceNt(ceD[i].arr,ceD[i].dep);}
 }
@@ -166,25 +200,43 @@ async function cePush(){
   var tok=ceGetTok();
   if(!tok){ceStat('err','Configurez votre GitHub Token');return;}
   var btn=document.getElementById('ce-save-btn');
-  btn.disabled=true;btn.textContent='Sauvegarde...';ceStat('inf','Envoi vers GitHub...');
+  btn.disabled=true;btn.textContent='Sauvegarde...';
+  var cleanTok=tok.replace(/[^\x20-\x7E]/g,'');
+  var _cfg2=ceCfg();var apiUrl='https://api.github.com/repos/'+_cfg2.owner+'/'+_cfg2.repo+'/contents/'+_cfg2.file;
+  var apiHeaders={'Authorization':'Bearer '+cleanTok,'Content-Type':'application/json','Accept':'application/vnd.github+json'};
   try{
+    ceStat('inf','R\u00e9cup\u00e9ration du SHA...');
+    var getUrl=apiUrl+'?ref='+_cfg2.branch+'&t='+Date.now();
+    console.log('[CE] cfg:',_cfg2.owner+'/'+_cfg2.repo+'/'+_cfg2.file+' branch:'+_cfg2.branch);
+    console.log('[CE] GET '+getUrl);
+    var getRes=await fetch(getUrl,{headers:{'Authorization':'Bearer '+cleanTok,'Accept':'application/vnd.github+json'}});
+    console.log('[CE] GET status:'+getRes.status);
+    if(!getRes.ok){
+      var errTxt=await getRes.text();
+      console.log('[CE] error:',errTxt.slice(0,200));
+      throw new Error('GitHub GET '+getRes.status+(getRes.status===404?' \u2014 "'+_cfg2.file+'" introuvable dans '+_cfg2.owner+'/'+_cfg2.repo+' (branche: '+_cfg2.branch+')':getRes.status===401?' \u2014 token invalide':''));
+    }
+    var getJson=await getRes.json();
+    ceSha=getJson.sha;
+    console.log('[CE] SHA:'+ceSha+' path:'+getJson.path);
+
+    // PUT avec le SHA frais
+    ceStat('inf','Envoi vers GitHub...');
     var csv=ceGenCsv();
     var bytes=new TextEncoder().encode('\ufeff'+csv);
     var bin='';bytes.forEach(function(b){bin+=String.fromCharCode(b);});
-    var pl={message:'Mise \u00e0 jour reservations.csv',content:btoa(bin),branch:CE_BRANCH};
-    if(ceSha)pl.sha=ceSha;
-    var res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE,{
-      method:'PUT',
-      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
-      body:JSON.stringify(pl),
-    });
-    if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub API '+res.status);}
-    var result=await res.json();ceSha=result.content.sha;
+    var pl={message:'Mise \u00e0 jour reservations.csv \u2014 CalEdit',content:btoa(bin),branch:_cfg2.branch,sha:ceSha};
+    var res=await fetch(apiUrl,{method:'PUT',headers:apiHeaders,body:JSON.stringify(pl)});
+    if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub PUT '+res.status);}
+    var result=await res.json();
+    ceSha=result.content.sha;
     ceStat('ok','Sauvegard\u00e9 sur GitHub : '+ceD.length+' r\u00e9servations');
-    btn.textContent='Sauvegard\u00e9 !';ceTst('ok','Sauvegard\u00e9 sur GitHub');
+    btn.textContent='Sauvegard\u00e9 !';
+    ceTst('ok','Sauvegard\u00e9 sur GitHub');
     setTimeout(async function(){btn.textContent='Sauvegarder';btn.disabled=false;await syncFromSheet();},2000);
   }catch(e){
-    ceStat('err','Erreur : '+e.message);ceTst('err','Erreur : '+e.message);
+    ceStat('err','Erreur : '+e.message);
+    ceTst('err','Erreur : '+e.message);
     btn.textContent='Sauvegarder';btn.disabled=false;
   }
 }
@@ -292,7 +344,6 @@ function ceConfirmAdd(){
   if(!finalName){ceTst('err','Renseignez le nom du locataire');document.getElementById('ce-a-name').focus();return;}
   function p(s){var x=s.split('/');return new Date(+x[2],+x[1]-1,+x[0]);}
   ceD.push({_id:ceId(),arr:ceFmt(calSel.arr),dep:ceFmt(calSel.dep),name:finalName,nat:nat,vis:vis,prix:prix});
-  ceD.sort(function(a,b){return p(a.arr)-p(b.arr);});
   ceRender();ceCloseAdd();
   ceTst('ok','R\u00e9servation ajout\u00e9e \u2014 Sauvegarder pour confirmer');
   ceStat('inf','Ajout\u00e9e \u2014 Sauvegarder pour confirmer');

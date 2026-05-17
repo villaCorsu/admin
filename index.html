@@ -457,9 +457,17 @@ document.addEventListener('keydown',e=>{
       </div>
     </div>
     <div class="ce-tok">
-      <label>GitHub Token</label>
+      <label>Token</label>
       <input class="ce-tok-inp" id="ce-tok" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"/>
-      <button class="ce-tok-save" onclick="ceSaveTok()">Enregistrer</button>
+      <button class="ce-tok-save" onclick="ceSaveTok()">OK</button>
+      <button class="ce-tok-save" onclick="localStorage.removeItem('vc_gh_token');document.getElementById('ce-tok').value='';ceTokUI('');" style="background:rgba(255,107,157,.2);border-color:rgba(255,107,157,.4);color:#FF6B9D">&#x2715;</button>
+      <label style="margin-left:8px">Owner</label>
+      <input class="ce-tok-inp" id="ce-cfg-owner" placeholder="villaCorsu" style="max-width:120px"/>
+      <label>Repo</label>
+      <input class="ce-tok-inp" id="ce-cfg-repo" placeholder="admin" style="max-width:100px"/>
+      <label>Branche</label>
+      <input class="ce-tok-inp" id="ce-cfg-branch" placeholder="main" style="max-width:70px"/>
+      <button class="ce-tok-save" onclick="ceSaveCfg()">Appliquer</button>
       <div class="ce-tok-st" id="ce-tok-st"></div>
     </div>
     <div class="ce-st" id="ce-st"></div>
