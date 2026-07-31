@@ -59,21 +59,19 @@ function setSyncState(state, msg) {
 async function syncFromSheet() {
   setSyncState('loading', null);
   try {
+    if (typeof loadSheetData === 'undefined') throw new Error('data.js non chargé');
     const raw = await loadSheetData();
     BOOKINGS  = enrichBookings(raw);
     lastSyncTime = new Date();
     const t  = lastSyncTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    setSyncState('success',
-      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-       ${raw.length} réservations chargées depuis <a href="https://villacorsu.github.io/admin/reservations.csv" target="_blank" style="color:inherit;font-weight:600">reservations.csv</a> — ${t}`
-    );
+    const svgCheck = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/><' + '/svg>';
+    setSyncState('success', svgCheck + ' ' + raw.length + ' réservations chargées depuis <a href="https://villacorsu.github.io/admin/reservations.csv" target="_blank" style="color:inherit;font-weight:600">reservations.csv</a> — ' + t);
     render();
+    console.log('[Sync] render() called OK');
   } catch (err) {
     console.warn("[VillaCorsu] Sync error:", err.message);
-    if (!BOOKINGS.length) BOOKINGS = enrichBookings(FALLBACK_DATA);
-    setSyncState('error',
-      `⚠️ ${err.message} — <a href="#" onclick="syncFromSheet();return false;" style="color:inherit;font-weight:600">Réessayer</a>`
-    );
+    if (!BOOKINGS.length) BOOKINGS = enrichBookings(typeof FALLBACK_DATA !== 'undefined' ? FALLBACK_DATA : []);
+    setSyncState('error', '\u26a0\ufe0f ' + err.message + ' \u2014 <a href="#" onclick="syncFromSheet();return false;" style="color:inherit;font-weight:600">R\u00e9essayer</a>');
     render();
   }
 }
@@ -305,7 +303,8 @@ function render() {
 // ── Init ─────────────────────────────────────────────────────
 (async function init() {
   // Détermine l'année de départ en regardant les données de secours
-  const years = [...new Set(FALLBACK_DATA.flatMap(b => [
+  const _fd = typeof FALLBACK_DATA !== 'undefined' ? FALLBACK_DATA : [];
+  const years = [...new Set(_fd.flatMap(b => [
     +b.arr.split('/')[2], +b.dep.split('/')[2]
   ]))].sort();
   if (!years.includes(currentYear) && years.length) {
@@ -314,25 +313,27 @@ function render() {
   document.getElementById('year-label').textContent = currentYear;
 
   // Charge d'abord les données locales pour affichage immédiat
-  BOOKINGS = enrichBookings(FALLBACK_DATA);
+  BOOKINGS = enrichBookings(typeof FALLBACK_DATA !== 'undefined' ? FALLBACK_DATA : []);
   render();
 
   // Puis tente la synchro reservations.csv en arrière-plan
   setSyncState('loading', null);
   try {
+    if (typeof loadSheetData === 'undefined') throw new Error('data.js non chargé');
     const raw = await loadSheetData();
+    console.log('[calendar] sync: loaded', raw.length, 'rows');
+    console.log('[calendar] first row:', JSON.stringify(raw[0]));
+    console.log('[calendar] last row:', JSON.stringify(raw[raw.length-1]));
     BOOKINGS  = enrichBookings(raw);
+    console.log('[calendar] BOOKINGS enriched:', BOOKINGS.length);
     lastSyncTime = new Date();
     const t  = lastSyncTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    setSyncState('success',
-      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-       ${raw.length} réservations chargées depuis <a href="https://villacorsu.github.io/admin/reservations.csv" target="_blank" style="color:inherit;font-weight:600">reservations.csv</a> — ${t}`
-    );
+    setSyncState('success', raw.length + ' réservations chargées depuis reservations.csv — ' + t);
     render();
   } catch (err) {
     console.warn('Init sync failed, keeping fallback:', err);
     setSyncState('error',
-      `⚠️ ${err.message} — <a href="#" onclick="syncFromSheet();return false;" style="color:inherit;font-weight:600">Réessayer</a>`
+'⚠️ ' + err.message + ' — <a href="#" onclick="syncFromSheet();return false;" style="color:inherit;font-weight:600">Réessayer</a>'
     );
   }
 })();

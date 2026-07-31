@@ -232,7 +232,13 @@ async function cePush(){
     ceStat('ok','Sauvegard\u00e9 sur GitHub : '+ceD.length+' r\u00e9servations');
     btn.textContent='Sauvegard\u00e9 !';
     ceTst('ok','Sauvegard\u00e9 sur GitHub');
-    setTimeout(async function(){btn.textContent='Sauvegarder';btn.disabled=false;await syncFromSheet();},2000);
+    setTimeout(async function(){
+      btn.textContent='Sauvegarder';btn.disabled=false;
+      ceStat('inf','Mise \u00e0 jour du calendrier...');
+      await syncFromSheet();
+      ceStat('ok','Calendrier synchronis\u00e9 !');
+      setTimeout(function(){document.getElementById('ce-st').className='ce-st';},3000);
+    },2000);
   }catch(e){
     ceStat('err','Erreur : '+e.message);
     ceTst('err','Erreur : '+e.message);
