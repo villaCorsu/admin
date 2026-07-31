@@ -27,7 +27,6 @@ function ceLoadCfgToForm(){
 }
 
 let ceD=[],ceSha=null,_cid=0;
-let ceD=[],ceSha=null,_cid=0;
 const ceId=()=>++_cid;
 const ceOwn=n=>String(n).toLowerCase().indexOf('propri')>=0;
 const cePad=n=>n<10?'0'+n:String(n);
