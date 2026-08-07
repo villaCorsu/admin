@@ -166,6 +166,24 @@
       <div class="chart-box"><canvas id="chartAnnuel"></canvas></div>
     </div>
   </div>
+  <div class="panel" style="margin-bottom:16px;">
+    <h2>Bilan de consommation annuelle EDF <span class="muted" style="font-weight:400;font-size:12px;">— contrat 185343</span></h2>
+    <p class="desc">Consommation facturée et coût annuel (tarif bleu résidentiel, option Base, 9 kVA) — source : bilans annuels EDF Corse</p>
+    <div class="chart-box"><canvas id="chartConso"></canvas></div>
+    <table style="margin-top:16px;">
+      <thead>
+        <tr>
+          <th>Année</th>
+          <th style="text-align:right;">Consommation</th>
+          <th style="text-align:right;">Abonnement HT</th>
+          <th style="text-align:right;">Consommation HT</th>
+          <th style="text-align:right;">Taxes</th>
+          <th style="text-align:right;">Total TTC</th>
+        </tr>
+      </thead>
+      <tbody id="consoTableBody"></tbody>
+    </table>
+  </div>
   <div class="panel">
     <h2>Détail des factures</h2>
     <p class="desc">Toutes les factures identifiées dans Gmail</p>
@@ -397,6 +415,39 @@ new Chart(document.getElementById('chartAnnuel'), {
     scales: { x: { ticks: { color: '#8a97a6' }, grid: { display: false } }, y: { ticks: { color: '#8a97a6', callback: v => v + ' €' }, grid: { color: 'rgba(255,255,255,0.06)' } } }
   }
 });
+const CONSO_EDF = [
+  { year: 2023, kwh: 1306, aboHT: null, consoHT: null, taxes: null, totalTTC: 417.04 },
+  { year: 2024, kwh: 955, aboHT: 102.66, consoHT: 180.21, taxes: 53.96, totalTTC: 336.83 },
+  { year: 2025, kwh: 3558, aboHT: 162.75, consoHT: 582.01, taxes: 194.77, totalTTC: 939.53 }
+];
+new Chart(document.getElementById('chartConso'), {
+  data: {
+    labels: CONSO_EDF.map(x => String(x.year)),
+    datasets: [
+      { type: 'bar', label: 'Consommation (kWh)', data: CONSO_EDF.map(x => x.kwh), backgroundColor: COLORS.edf, borderRadius: 6, maxBarThickness: 50, yAxisID: 'y' },
+      { type: 'line', label: 'Coût total (€ TTC)', data: CONSO_EDF.map(x => x.totalTTC), borderColor: '#f2b134', backgroundColor: '#f2b13433', tension: 0.3, pointRadius: 5, pointBackgroundColor: '#f2b134', yAxisID: 'y1' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#8a97a6', usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + (ctx.dataset.yAxisID === 'y1' ? fmtEUR(ctx.raw) : ctx.raw + ' kWh') } } },
+    scales: {
+      x: { ticks: { color: '#8a97a6' }, grid: { display: false } },
+      y: { position: 'left', ticks: { color: '#8a97a6', callback: v => v + ' kWh' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+      y1: { position: 'right', ticks: { color: '#8a97a6', callback: v => v + ' €' }, grid: { display: false } }
+    }
+  }
+});
+document.getElementById('consoTableBody').innerHTML = CONSO_EDF.map(x => `
+  <tr>
+    <td>${x.year}</td>
+    <td style="text-align:right;" class="amount">${x.kwh.toLocaleString('fr-FR')} kWh</td>
+    <td style="text-align:right;" class="muted">${x.aboHT != null ? fmtEUR(x.aboHT) : '—'}</td>
+    <td style="text-align:right;" class="muted">${x.consoHT != null ? fmtEUR(x.consoHT) : '—'}</td>
+    <td style="text-align:right;" class="muted">${x.taxes != null ? fmtEUR(x.taxes) : '—'}</td>
+    <td style="text-align:right;" class="amount">${fmtEUR(x.totalTTC)}</td>
+  </tr>
+`).join('');
 const rows = [
   ...DATA.edf.map(x => ({...x, poste: 'edf', posteLabel: 'EDF Corse'})),
   ...DATA.kyrnolia.map(x => ({...x, poste: 'kyr', posteLabel: 'Kyrnolia'})),
