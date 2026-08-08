@@ -184,6 +184,23 @@
       <tbody id="consoTableBody"></tbody>
     </table>
   </div>
+  <div class="panel" style="margin-bottom:16px;">
+    <h2>Impôts &amp; taxes locales <span class="muted" style="font-weight:400;font-size:12px;">— Villa Corsu, Monacia-d'Aullène</span></h2>
+    <p class="desc">Taxe d'habitation (résidence secondaire), taxe foncière et redevance CC Sud Corse — source : avis d'imposition</p>
+    <div class="chart-box"><canvas id="chartImpots"></canvas></div>
+    <table style="margin-top:16px;">
+      <thead>
+        <tr>
+          <th>Impôt / taxe</th>
+          <th>Année</th>
+          <th style="text-align:right;">Montant</th>
+          <th>Échéance</th>
+          <th>Évolution</th>
+        </tr>
+      </thead>
+      <tbody id="impotsTableBody"></tbody>
+    </table>
+  </div>
   <div class="panel">
     <h2>Détail des factures</h2>
     <p class="desc">Toutes les factures identifiées dans Gmail</p>
@@ -518,6 +535,40 @@ document.getElementById('consoTableBody').innerHTML = CONSO_EDF.map(x => `
     <td style="text-align:right;" class="muted">${x.consoHT != null ? fmtEUR(x.consoHT) : '—'}</td>
     <td style="text-align:right;" class="muted">${x.taxes != null ? fmtEUR(x.taxes) : '—'}</td>
     <td style="text-align:right;" class="amount">${fmtEUR(x.totalTTC)}</td>
+  </tr>
+`).join('');
+const IMPOTS_DATA = [
+  { type: "Taxe d'habitation (résidence secondaire)", year: 2023, amount: 983.00, due: "15/12/2023", variation: "+7,13 % vs 2022" },
+  { type: "Taxe foncière", year: 2023, amount: 918.00, due: "16/10/2023", variation: "+7,04 % vs 2022 (part communale)" },
+  { type: "Taxe d'habitation (résidence secondaire)", year: 2024, amount: 1022.00, due: "16/12/2024", variation: "+3,87 % vs 2023" },
+  { type: "Taxe foncière", year: 2024, amount: 954.00, due: "15/10/2024", variation: "+3,95 % vs 2023 (part communale)" },
+  { type: "Taxe d'habitation (résidence secondaire)", year: 2025, amount: 1053.00, due: "15/12/2025", variation: "+1,76 % vs 2024" },
+  { type: "Taxe foncière", year: 2025, amount: 976.00, due: "Prélèvements mensuels (sept.–nov. 2025, puis mensualisé 2026)", variation: "+1,81 % vs 2024 (part communale)" },
+  { type: "Redevance CC Sud Corse (location saisonnière)", year: 2026, amount: 37.80, due: "29/08/2026", variation: "—" }
+];
+const impotsYears = [...new Set(IMPOTS_DATA.filter(x => x.type.startsWith('Taxe')).map(x => x.year))].sort();
+new Chart(document.getElementById('chartImpots'), {
+  type: 'bar',
+  data: {
+    labels: impotsYears.map(String),
+    datasets: [
+      { label: "Taxe d'habitation", data: impotsYears.map(y => { const it = IMPOTS_DATA.find(x => x.year === y && x.type.startsWith("Taxe d'habitation")); return it ? it.amount : null; }), backgroundColor: '#f2b134', borderRadius: 6, maxBarThickness: 40 },
+      { label: 'Taxe foncière', data: impotsYears.map(y => { const it = IMPOTS_DATA.find(x => x.year === y && x.type === 'Taxe foncière'); return it ? it.amount : null; }), backgroundColor: '#ef5b5b', borderRadius: 6, maxBarThickness: 40 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#8a97a6', usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + fmtEUR(ctx.raw) } } },
+    scales: { x: { ticks: { color: '#8a97a6' }, grid: { display: false } }, y: { ticks: { color: '#8a97a6', callback: v => v + ' €' }, grid: { color: 'rgba(255,255,255,0.06)' } } }
+  }
+});
+document.getElementById('impotsTableBody').innerHTML = IMPOTS_DATA.map(x => `
+  <tr>
+    <td>${x.type}</td>
+    <td>${x.year}</td>
+    <td style="text-align:right;" class="amount">${fmtEUR(x.amount)}</td>
+    <td class="muted">${x.due}</td>
+    <td class="muted">${x.variation}</td>
   </tr>
 `).join('');
 const rows = [
