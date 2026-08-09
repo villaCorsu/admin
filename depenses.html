@@ -24,7 +24,7 @@
     --radius:14px;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
   body{
     background:radial-gradient(1200px 600px at 10% -10%, #1a2636 0%, var(--bg) 55%) fixed;
     color:var(--text);
@@ -32,7 +32,7 @@
     -webkit-font-smoothing:antialiased;
     padding:32px 24px 64px;
   }
-  .wrap{max-width:1180px;margin:0 auto;}
+  .wrap{max-width:1180px;margin:0 auto;width:100%;}
   header{
     display:flex;
     justify-content:space-between;
@@ -88,10 +88,12 @@
   .legend-row{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;}
   .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
   .legend-item .sw{width:10px;height:10px;border-radius:3px;}
+  .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
   thead th{
     text-align:left;padding:10px 12px;color:var(--muted);font-weight:600;font-size:11px;
     text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);
+    white-space:nowrap;
   }
   tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);}
   tbody tr:hover{background:rgba(255,255,255,0.03);}
@@ -107,7 +109,31 @@
   }
   @media (max-width: 1000px){.kpis{grid-template-columns:repeat(3,1fr);}}
   @media (max-width: 900px){.grid{grid-template-columns:1fr;}}
-  @media (max-width: 520px){.kpis{grid-template-columns:1fr 1fr;}table{font-size:12px;}}
+  @media (max-width: 640px){
+    body{padding:18px 12px 40px;}
+    .wrap{max-width:100%;}
+    header{gap:10px;margin-bottom:18px;padding-bottom:14px;align-items:flex-start;}
+    header h1{font-size:20px;}
+    header p{font-size:11.5px;}
+    .badge{font-size:11px;padding:5px 10px;}
+    .kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+    .kpi{padding:12px 14px;border-radius:12px;}
+    .kpi .label{font-size:10px;}
+    .kpi .value{font-size:17px;}
+    .kpi .sub{font-size:11px;}
+    .grid{gap:10px;margin-bottom:10px;}
+    .panel{padding:14px;border-radius:12px;}
+    .panel h2{font-size:14px;}
+    .chart-box{height:220px;}
+    .chart-box.small{height:200px;}
+    table{font-size:12px;min-width:480px;}
+    thead th, tbody td{padding:8px 8px;}
+    footer{flex-direction:column;gap:4px;font-size:10px;margin-top:20px;}
+  }
+  @media (max-width: 400px){
+    header h1{font-size:18px;}
+    .kpis{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -117,7 +143,7 @@
       <h1>Cockpit de dépenses <span>· Villa Corsu</span></h1>
       <p>Factures EDF Corse (électricité), Kyrnolia (eau) et SFR (internet/ligne fixe) — extraites automatiquement de Gmail</p>
     </div>
-    <div class="badge"><span class="dot"></span> Dernière extraction : 07/08/2026</div>
+    <div class="badge"><span class="dot"></span> Dernière extraction : 09/08/2026</div>
   </header>
   <div class="kpis">
     <div class="kpi total">
@@ -170,6 +196,7 @@
     <h2>Bilan de consommation annuelle EDF <span class="muted" style="font-weight:400;font-size:12px;">— contrat 185343</span></h2>
     <p class="desc">Consommation facturée et coût annuel (tarif bleu résidentiel, option Base, 9 kVA) — source : bilans annuels EDF Corse</p>
     <div class="chart-box"><canvas id="chartConso"></canvas></div>
+    <div class="table-wrap">
     <table style="margin-top:16px;">
       <thead>
         <tr>
@@ -183,11 +210,13 @@
       </thead>
       <tbody id="consoTableBody"></tbody>
     </table>
+    </div>
   </div>
   <div class="panel" style="margin-bottom:16px;">
     <h2>Impôts &amp; taxes locales <span class="muted" style="font-weight:400;font-size:12px;">— Villa Corsu, Monacia-d'Aullène</span></h2>
     <p class="desc">Taxe d'habitation (résidence secondaire), taxe foncière et redevance CC Sud Corse — source : avis d'imposition</p>
     <div class="chart-box"><canvas id="chartImpots"></canvas></div>
+    <div class="table-wrap">
     <table style="margin-top:16px;">
       <thead>
         <tr>
@@ -200,10 +229,12 @@
       </thead>
       <tbody id="impotsTableBody"></tbody>
     </table>
+    </div>
   </div>
   <div class="panel">
     <h2>Détail des factures</h2>
     <p class="desc">Toutes les factures identifiées dans Gmail</p>
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -216,6 +247,7 @@
       </thead>
       <tbody id="invoiceTableBody"></tbody>
     </table>
+    </div>
   </div>
   <footer>
     <span>Cockpit généré à partir des emails Gmail (frederic.natali@gmail.com) — contrat EDF n°185343, abonnement Kyrnolia n°5485989, ligne SFR 04 20 01 91 13</span>
@@ -538,10 +570,6 @@ document.getElementById('consoTableBody').innerHTML = CONSO_EDF.map(x => `
   </tr>
 `).join('');
 const IMPOTS_DATA = [
-  { type: "Taxe d'habitation (résidence secondaire)", year: 2023, amount: 983.00, due: "15/12/2023", variation: "+7,13 % vs 2022" },
-  { type: "Taxe foncière", year: 2023, amount: 918.00, due: "16/10/2023", variation: "+7,04 % vs 2022 (part communale)" },
-  { type: "Taxe d'habitation (résidence secondaire)", year: 2024, amount: 1022.00, due: "16/12/2024", variation: "+3,87 % vs 2023" },
-  { type: "Taxe foncière", year: 2024, amount: 954.00, due: "15/10/2024", variation: "+3,95 % vs 2023 (part communale)" },
   { type: "Taxe d'habitation (résidence secondaire)", year: 2025, amount: 1053.00, due: "15/12/2025", variation: "+1,76 % vs 2024" },
   { type: "Taxe foncière", year: 2025, amount: 976.00, due: "Prélèvements mensuels (sept.–nov. 2025, puis mensualisé 2026)", variation: "+1,81 % vs 2024 (part communale)" },
   { type: "Redevance CC Sud Corse (location saisonnière)", year: 2026, amount: 37.80, due: "29/08/2026", variation: "—" }
