@@ -103,5 +103,12 @@
     "description": "Ménage 2025",
     "categorie": "Ménage",
     "montant": 1500
+  },
+  {
+    "id": "exp-1787240384118",
+    "date": "2026-08-01",
+    "description": "Ménage 2026",
+    "categorie": "Ménage",
+    "montant": 1500
   }
 ]
