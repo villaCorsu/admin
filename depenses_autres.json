@@ -28,13 +28,6 @@
     "id": "exp-004"
   },
   {
-    "date": "2025-01-07",
-    "description": "Ménage",
-    "categorie": "Ménage",
-    "montant": 1500,
-    "id": "exp-005"
-  },
-  {
     "date": "2025-01-08",
     "description": "Darty",
     "categorie": "Mobiliers",
@@ -47,20 +40,6 @@
     "categorie": "Voyages",
     "montant": 460,
     "id": "exp-007"
-  },
-  {
-    "date": "2025-01-10",
-    "description": "Manich",
-    "categorie": "Alimentations",
-    "montant": 195,
-    "id": "exp-008"
-  },
-  {
-    "date": "2025-01-10",
-    "description": "Auchan",
-    "categorie": "Alimentations",
-    "montant": 380,
-    "id": "exp-009"
   },
   {
     "date": "2025-01-10",
@@ -91,32 +70,11 @@
     "id": "exp-013"
   },
   {
-    "date": "2025-01-10",
-    "description": "Manich",
-    "categorie": "Alimentations",
-    "montant": 25,
-    "id": "exp-014"
-  },
-  {
-    "date": "2025-01-10",
-    "description": "Manich",
-    "categorie": "Alimentations",
-    "montant": 352,
-    "id": "exp-015"
-  },
-  {
     "date": "2025-01-12",
     "description": "Bateau",
     "categorie": "Voyages",
     "montant": 435,
     "id": "exp-016"
-  },
-  {
-    "date": "2025-01-12",
-    "description": "Auchan",
-    "categorie": "Alimentations",
-    "montant": 240,
-    "id": "exp-017"
   },
   {
     "date": "2025-01-12",
@@ -140,9 +98,9 @@
     "montant": 3000
   },
   {
-    "id": "exp-1787240288278",
-    "date": "2026-08-01",
-    "description": "Ménage 2026",
+    "id": "exp-1787240360762",
+    "date": "2025-01-07",
+    "description": "Ménage 2025",
     "categorie": "Ménage",
     "montant": 1500
   }
