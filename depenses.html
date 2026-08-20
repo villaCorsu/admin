@@ -107,6 +107,12 @@
     margin-top:32px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);
     font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
   }
+  .autres-form input{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;}
+  .autres-form label{color:var(--muted);font-size:11px;display:block;margin-bottom:4px;}
+  .btn-primary{background:var(--accent);color:#1a1200;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-save{background:var(--edf);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-edit{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-right:4px;}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
   @media (max-width: 1000px){.kpis{grid-template-columns:repeat(3,1fr);}}
   @media (max-width: 900px){.grid{grid-template-columns:1fr;}}
   @media (max-width: 640px){
@@ -129,6 +135,8 @@
     table{font-size:12px;min-width:480px;}
     thead th, tbody td{padding:8px 8px;}
     footer{flex-direction:column;gap:4px;font-size:10px;margin-top:20px;}
+    .autres-form{flex-direction:column;align-items:stretch !important;}
+    .autres-form input{width:100% !important;}
   }
   @media (max-width: 400px){
     header h1{font-size:18px;}
@@ -143,7 +151,7 @@
       <h1>Cockpit de dépenses <span>· Villa Corsu</span></h1>
       <p>Factures EDF Corse (électricité), Kyrnolia (eau) et SFR (internet/ligne fixe) — extraites automatiquement de Gmail</p>
     </div>
-    <div class="badge"><span class="dot"></span> Dernière extraction : 17/08/2026</div>
+    <div class="badge"><span class="dot"></span> Dernière extraction : 20/08/2026</div>
   </header>
   <div class="kpis">
     <div class="kpi total">
@@ -229,6 +237,57 @@
       </thead>
       <tbody id="impotsTableBody"></tbody>
     </table>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:16px;">
+    <h2>Autres dépenses <span class="muted" style="font-weight:400;font-size:12px;">— mobilier, électroménager, réparations, divers</span></h2>
+    <p class="desc">Dépenses diverses de la villa, saisies manuellement (éditables ci-dessous, enregistrées dans le dépôt GitHub)</p>
+    <div id="autresStatus" class="muted" style="font-size:12px;margin-bottom:12px;">Chargement…</div>
+    <div class="kpis" id="autresKpis" style="margin-bottom:16px;"></div>
+    <div class="grid">
+      <div class="panel" style="padding:0;border:none;background:transparent;">
+        <div class="chart-box"><canvas id="chartAutresAnnee"></canvas></div>
+      </div>
+      <div class="panel" style="padding:0;border:none;background:transparent;">
+        <div class="chart-box small"><canvas id="chartAutresCategorie"></canvas></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+    <table style="margin-top:16px;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Catégorie</th>
+          <th style="text-align:right;">Montant</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="autresTableBody"></tbody>
+    </table>
+    </div>
+    <div class="autres-form" style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <div><label>Date</label><input type="date" id="autresNewDate"></div>
+      <div style="flex:1;min-width:140px;"><label>Description</label><input type="text" id="autresNewDesc" placeholder="Ex : Lave-linge" style="width:100%;"></div>
+      <div>
+        <label>Catégorie</label>
+        <input list="autresCatList" id="autresNewCat" placeholder="Mobilier" style="width:170px;">
+        <datalist id="autresCatList">
+          <option value="Mobilier"></option>
+          <option value="Électroménager"></option>
+          <option value="Réparations &amp; entretien"></option>
+          <option value="Ménage"></option>
+          <option value="Voyages"></option>
+          <option value="Alimentation"></option>
+          <option value="Divers"></option>
+        </datalist>
+      </div>
+      <div><label>Montant (€)</label><input type="number" step="0.01" id="autresNewAmount" style="width:100px;"></div>
+      <button id="autresAddBtn" class="btn-primary" type="button">+ Ajouter</button>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button id="autresSaveBtn" class="btn-save" type="button">Enregistrer sur GitHub</button>
+      <span id="autresSaveStatus" class="muted" style="font-size:12px;"></span>
     </div>
   </div>
   <div class="panel">
@@ -613,6 +672,164 @@ document.getElementById('invoiceTableBody').innerHTML = rows.map(r => `
     <td style="text-align:right;" class="amount">${r.amount != null ? fmtEUR(r.amount) : '—'}</td>
   </tr>
 `).join('');
+
+// ===== Autres dépenses (mobilier, électroménager, réparations, divers) — édition en direct =====
+const GITHUB_REPO = 'villaCorsu/admin';
+const AUTRES_PATH = 'depenses_autres.json';
+function getGithubToken(force){
+  let tok = sessionStorage.getItem('vc_gh_token');
+  if (!tok || force) {
+    tok = prompt('Jeton GitHub (Personal Access Token, droits repo) — demandé une fois par session, non enregistré dans le fichier :');
+    if (tok) sessionStorage.setItem('vc_gh_token', tok.trim());
+    tok = tok ? tok.trim() : '';
+  }
+  return tok;
+}
+let autresData = [];
+let autresChartAnnee = null;
+let autresChartCat = null;
+const AUTRES_COLORS = { 'Mobilier':'#3f8cff','Mobiliers':'#3f8cff','Électroménager':'#22c3a6','Réparations & entretien':'#f2b134','Ménage':'#a78bfa','Voyages':'#ef5b5b','Alimentation':'#5ec9e8','Alimentations':'#5ec9e8','Divers':'#8a97a6' };
+function colorForCat(cat){ return AUTRES_COLORS[cat] || '#c48f5f'; }
+function b64EncodeUtf8(str){ return btoa(unescape(encodeURIComponent(str))); }
+
+async function loadAutresDepenses(){
+  const statusEl = document.getElementById('autresStatus');
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/' + GITHUB_REPO + '/main/' + AUTRES_PATH + '?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    autresData = await res.json();
+    statusEl.textContent = autresData.length + ' dépense(s) chargée(s) depuis GitHub';
+    renderAutres();
+  } catch(e) {
+    statusEl.textContent = 'Erreur de chargement depenses_autres.json : ' + e.message;
+  }
+}
+
+function renderAutres(){
+  const total = autresData.reduce((s,x) => s + x.montant, 0);
+  const byCat = {};
+  autresData.forEach(x => { byCat[x.categorie] = (byCat[x.categorie] || 0) + x.montant; });
+  const catEntries = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+
+  const kpiEl = document.getElementById('autresKpis');
+  kpiEl.style.gridTemplateColumns = 'repeat(' + Math.min(5, catEntries.length + 1) + ', 1fr)';
+  kpiEl.innerHTML = `
+    <div class="kpi total"><div class="label">Total autres dépenses</div><div class="value">${fmtEUR(total)}</div><div class="sub">${autresData.length} dépense(s)</div></div>
+  ` + catEntries.slice(0, 4).map(([cat, amt]) => `
+    <div class="kpi" style="--kpi-color:${colorForCat(cat)}"><div class="label">${cat}</div><div class="value">${fmtEUR(amt)}</div><div class="sub">${total ? Math.round(amt/total*100) : 0}% du total</div></div>
+  `).join('');
+
+  const autresYears = [...new Set(autresData.map(x => x.date.slice(0,4)))].sort();
+  const autresCats = [...new Set(autresData.map(x => x.categorie))];
+  if (autresChartAnnee) autresChartAnnee.destroy();
+  autresChartAnnee = new Chart(document.getElementById('chartAutresAnnee'), {
+    type: 'bar',
+    data: { labels: autresYears, datasets: autresCats.map(cat => ({
+      label: cat,
+      data: autresYears.map(y => autresData.filter(x => x.date.startsWith(y) && x.categorie === cat).reduce((s,x) => s + x.montant, 0)),
+      backgroundColor: colorForCat(cat), borderRadius: 6, maxBarThickness: 40
+    })) },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8a97a6', usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + fmtEUR(ctx.raw) } } },
+      scales: { x: { stacked: true, ticks: { color: '#8a97a6' }, grid: { display: false } }, y: { stacked: true, ticks: { color: '#8a97a6', callback: v => v + ' €' }, grid: { color: 'rgba(255,255,255,0.06)' } } }
+    }
+  });
+
+  if (autresChartCat) autresChartCat.destroy();
+  autresChartCat = new Chart(document.getElementById('chartAutresCategorie'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(byCat), datasets: [{ data: Object.values(byCat), backgroundColor: Object.keys(byCat).map(colorForCat), borderColor: '#161f2c', borderWidth: 3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: 'bottom', labels: { color: '#8a97a6', boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + fmtEUR(ctx.raw) } } }
+    }
+  });
+
+  document.getElementById('autresTableBody').innerHTML = [...autresData].sort((a,b) => b.date.localeCompare(a.date)).map(x => `
+    <tr>
+      <td>${fmtDate(x.date)}</td>
+      <td class="muted">${x.description}</td>
+      <td><span class="tag" style="background:${colorForCat(x.categorie)}22;color:${colorForCat(x.categorie)}">${x.categorie}</span></td>
+      <td style="text-align:right;" class="amount">${fmtEUR(x.montant)}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        <button class="btn-edit" type="button" onclick="editAutreRow('${x.id}')">Modifier</button>
+        <button class="btn-danger" type="button" onclick="deleteAutreRow('${x.id}')">Suppr.</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function editAutreRow(id){
+  const item = autresData.find(x => x.id === id);
+  if (!item) return;
+  document.getElementById('autresNewDate').value = item.date;
+  document.getElementById('autresNewDesc').value = item.description;
+  document.getElementById('autresNewCat').value = item.categorie;
+  document.getElementById('autresNewAmount').value = item.montant;
+  autresData = autresData.filter(x => x.id !== id);
+  renderAutres();
+  document.getElementById('autresSaveStatus').textContent = 'Ligne chargée dans le formulaire — modifie puis clique sur "+ Ajouter", puis "Enregistrer sur GitHub".';
+}
+
+function deleteAutreRow(id){
+  if (!confirm('Supprimer cette dépense ?')) return;
+  autresData = autresData.filter(x => x.id !== id);
+  renderAutres();
+  document.getElementById('autresSaveStatus').textContent = 'Supprimé localement — clique sur "Enregistrer sur GitHub" pour valider.';
+}
+
+document.getElementById('autresAddBtn').addEventListener('click', () => {
+  const date = document.getElementById('autresNewDate').value;
+  const desc = document.getElementById('autresNewDesc').value.trim();
+  const cat = document.getElementById('autresNewCat').value.trim() || 'Divers';
+  const amount = parseFloat(document.getElementById('autresNewAmount').value);
+  const statusEl = document.getElementById('autresSaveStatus');
+  if (!date || !desc || isNaN(amount)) {
+    statusEl.textContent = 'Complète la date, la description et le montant.';
+    return;
+  }
+  autresData.push({ id: 'exp-' + Date.now(), date, description: desc, categorie: cat, montant: Math.round(amount * 100) / 100 });
+  document.getElementById('autresNewDate').value = '';
+  document.getElementById('autresNewDesc').value = '';
+  document.getElementById('autresNewCat').value = '';
+  document.getElementById('autresNewAmount').value = '';
+  renderAutres();
+  statusEl.textContent = 'Ajouté localement — clique sur "Enregistrer sur GitHub" pour valider.';
+});
+
+document.getElementById('autresSaveBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('autresSaveStatus');
+  const token = getGithubToken(false);
+  if (!token) { statusEl.textContent = 'Enregistrement annulé (jeton non fourni).'; return; }
+  statusEl.textContent = 'Enregistrement en cours…';
+  try {
+    const shaRes = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + AUTRES_PATH, {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!shaRes.ok) throw new Error('Lecture GitHub échouée (' + shaRes.status + ')');
+    const shaJson = await shaRes.json();
+    const content = b64EncodeUtf8(JSON.stringify(autresData, null, 2));
+    const putRes = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + AUTRES_PATH, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Mise à jour autres dépenses (' + new Date().toISOString().slice(0,10) + ')', content, sha: shaJson.sha, branch: 'main' })
+    });
+    if (putRes.status === 401) {
+      sessionStorage.removeItem('vc_gh_token');
+      throw new Error('Jeton invalide ou expiré — réessaie, un nouveau jeton sera demandé.');
+    }
+    if (!putRes.ok) {
+      const errBody = await putRes.text();
+      throw new Error('Écriture GitHub échouée (' + putRes.status + ') ' + errBody.slice(0,200));
+    }
+    statusEl.textContent = 'Enregistré sur GitHub ✓ (' + new Date().toLocaleTimeString('fr-FR') + ')';
+  } catch(e) {
+    statusEl.textContent = 'Erreur : ' + e.message;
+  }
+});
+
+loadAutresDepenses();
 </script>
 </body>
 </html>
