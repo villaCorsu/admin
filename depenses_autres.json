@@ -1,0 +1,128 @@
+[
+  {
+    "date": "2024-01-10",
+    "description": "Canapé",
+    "categorie": "Mobiliers",
+    "montant": 1600.0,
+    "id": "exp-001"
+  },
+  {
+    "date": "2025-01-06",
+    "description": "Lit 160",
+    "categorie": "Mobiliers",
+    "montant": 780.0,
+    "id": "exp-002"
+  },
+  {
+    "date": "2025-01-07",
+    "description": "Fauteuil",
+    "categorie": "Mobiliers",
+    "montant": 300.0,
+    "id": "exp-003"
+  },
+  {
+    "date": "2025-01-07",
+    "description": "Réfrigirateur",
+    "categorie": "Mobiliers",
+    "montant": 1000.0,
+    "id": "exp-004"
+  },
+  {
+    "date": "2025-01-07",
+    "description": "Ménage",
+    "categorie": "Ménage",
+    "montant": 1500.0,
+    "id": "exp-005"
+  },
+  {
+    "date": "2025-01-08",
+    "description": "Darty",
+    "categorie": "Mobiliers",
+    "montant": 459.0,
+    "id": "exp-006"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Voiture Loc",
+    "categorie": "Voyages",
+    "montant": 460.0,
+    "id": "exp-007"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Manich",
+    "categorie": "Alimentations",
+    "montant": 195.0,
+    "id": "exp-008"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Auchan",
+    "categorie": "Alimentations",
+    "montant": 380.0,
+    "id": "exp-009"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Decathlon",
+    "categorie": "Divers",
+    "montant": 36.0,
+    "id": "exp-010"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Maison du monde",
+    "categorie": "Divers",
+    "montant": 16.0,
+    "id": "exp-011"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Gifi",
+    "categorie": "Divers",
+    "montant": 84.0,
+    "id": "exp-012"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "CEMAG",
+    "categorie": "Divers",
+    "montant": 64.0,
+    "id": "exp-013"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Manich",
+    "categorie": "Alimentations",
+    "montant": 25.0,
+    "id": "exp-014"
+  },
+  {
+    "date": "2025-01-10",
+    "description": "Manich",
+    "categorie": "Alimentations",
+    "montant": 352.0,
+    "id": "exp-015"
+  },
+  {
+    "date": "2025-01-12",
+    "description": "Bateau",
+    "categorie": "Voyages",
+    "montant": 435.0,
+    "id": "exp-016"
+  },
+  {
+    "date": "2025-01-12",
+    "description": "Auchan",
+    "categorie": "Alimentations",
+    "montant": 240.0,
+    "id": "exp-017"
+  },
+  {
+    "date": "2025-01-12",
+    "description": "Gamevert",
+    "categorie": "Divers",
+    "montant": 116.0,
+    "id": "exp-018"
+  }
+]
