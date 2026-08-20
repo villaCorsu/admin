@@ -138,5 +138,12 @@
     "description": "Baie vitrée",
     "categorie": "Mobilier",
     "montant": 3000
+  },
+  {
+    "id": "exp-1787240288278",
+    "date": "2026-08-01",
+    "description": "Ménage 2026",
+    "categorie": "Ménage",
+    "montant": 1500
   }
 ]
