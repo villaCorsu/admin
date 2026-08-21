@@ -91,13 +91,6 @@
     "montant": 618
   },
   {
-    "id": "exp-1787240147463",
-    "date": "2026-09-19",
-    "description": "Baie vitrée",
-    "categorie": "Mobilier",
-    "montant": 3000
-  },
-  {
     "id": "exp-1787240360762",
     "date": "2025-01-07",
     "description": "Ménage 2025",
@@ -110,5 +103,12 @@
     "description": "Ménage 2026",
     "categorie": "Ménage",
     "montant": 1500
+  },
+  {
+    "id": "exp-1787318506910",
+    "date": "2026-09-19",
+    "description": "Baie vitrée",
+    "categorie": "Mobiliers",
+    "montant": 3000
   }
 ]
